@@ -1,0 +1,1011 @@
+<!doctype html><html lang="en"><head><meta name="robots" content="noindex, nofollow"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}[hidden]{display:none!important}</style></head><body><title>Project Market Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: a teal ledger bar on the left edge; controls on the left, the market (bids grid) on the right; stacks on phones */
+:root{
+  --bg:#ffffff; --panel:#f3f7f7; --ink:#15211f; --muted:#5a6967; --line:#d5dfde;
+  --teal:#0f766e; --teal-soft:#d6efec; --amber:#b45309; --amber-soft:#fbefd9; --bad:#b42318; --bet:#f4f0fb; --betline:#c9b8e8; --betink:#5b3a99;
+  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1514; --panel:#172120; --ink:#e6efed; --muted:#9db0ad; --line:#2b3a38;
+  --teal:#3fb6aa; --teal-soft:#123a36; --amber:#f0a44b; --amber-soft:#3a2a12; --bad:#f2786d; --bet:#1f1a2b; --betline:#4b3d68; --betink:#c4aef0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1514; --panel:#172120; --ink:#e6efed; --muted:#9db0ad; --line:#2b3a38;
+  --teal:#3fb6aa; --teal-soft:#123a36; --amber:#f0a44b; --amber-soft:#3a2a12; --bad:#f2786d; --bet:#1f1a2b; --betline:#4b3d68; --betink:#c4aef0; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);border-left:8px solid var(--teal);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:20px}
+h1{font:700 30px/1.15 var(--f-display);margin:0;text-wrap:balance}
+h2{font:500 19px/1.2 var(--f-display);margin:0 0 10px}
+h3{font:600 14px/1.3 var(--f-body);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+p{margin:0 0 8px;max-width:68ch}
+.lead{color:var(--muted)}
+.cols{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.cols{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+select,input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px;width:100%}
+input[type=number]{font-family:var(--f-mono)}
+.bidrow{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:6px;margin-top:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:600 14px var(--f-body);border-radius:4px;padding:9px 14px;cursor:pointer;border:1px solid var(--teal);background:var(--teal);color:var(--bg)}
+button.ghost{background:transparent;color:var(--teal)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.budget{display:flex;justify-content:space-between;margin-top:10px;font-size:14px}
+.over{color:var(--bad);font-weight:600}
+.rivals{display:grid;gap:6px}
+.rival{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:center}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);white-space:nowrap}
+td.n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+td.win{background:var(--teal-soft);font-weight:600}
+td.you,th.you{background:var(--amber-soft)}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill.ok{border-color:var(--teal);color:var(--teal)}.pill.no{border-color:var(--bad);color:var(--bad)}
+.op{font:700 28px var(--f-display);color:var(--amber)}
+.log{font-size:14px}
+.log li{margin:2px 0}
+.bars{display:grid;gap:6px;margin-top:8px}
+.bar{display:grid;grid-template-columns:120px minmax(0,1fr) 52px;gap:8px;align-items:center;font-size:13.5px}
+.bar .track{height:14px;background:var(--bg);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;background:var(--teal)}
+.bar.none .fill{background:var(--bad)}
+.stats{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px}
+.stat b{display:block;font:600 20px var(--f-mono)}
+.stat span{font-size:12.5px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+.mkt{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:8px 10px;margin-top:8px}
+.mkt h4{margin:0 0 6px;font:600 14px var(--f-body)}
+.mkt table{font-size:13px}
+.mkt input{width:70px;padding:3px 6px}
+.mkt button{padding:4px 10px;font-size:13px}
+.pbar{display:inline-block;height:8px;background:var(--teal);border-radius:2px;vertical-align:middle;margin-right:6px}
+.oprules{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 14px}
+.opbar{display:flex;height:16px;border-radius:3px;overflow:hidden;border:1px solid var(--line);min-width:120px;background:var(--bg)}
+.opbar span{display:block;height:100%}
+.k-sale{background:var(--teal)}.k-rent{background:var(--amber)}.k-boost{background:var(--muted)}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:8px 0}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+tr.best td{font-weight:600}
+details.work{margin-top:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:8px 12px}
+details.work summary{cursor:pointer;font-weight:600;color:var(--teal)}
+ol.steps{margin:8px 0 0;padding:0;list-style:none;counter-reset:st;font-size:13.5px;display:grid;gap:3px}
+ol.steps li.win,ol.steps li.skip{counter-increment:st;padding-left:30px;text-indent:-30px}
+ol.steps li.win::before,ol.steps li.skip::before{content:counter(st) ". ";display:inline-block;width:30px;text-indent:0;font-family:var(--f-mono);font-size:12px}
+ol.steps ul.sub{margin:4px 0 6px;padding-left:18px;text-indent:0;font-weight:400;display:grid;gap:2px}
+ol.steps ul.sub li{list-style:disc}
+ol.steps li.head{color:var(--muted);font-weight:600}
+ol.steps li.win{color:var(--ink);font-weight:600}
+ol.steps li.skip{color:var(--muted)}
+ol.steps li.pay{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .4s ease}}
+.betzone{background:var(--bet);border:1px solid var(--betline);border-radius:8px;padding:14px;margin-top:18px}
+.betzone h2{color:var(--betink)}
+.betzone .mkt{border-color:var(--betline)}
+.betzone button{background:var(--betink);border-color:var(--betink);color:var(--bet)}
+.betzone button.ghost{background:transparent;color:var(--betink)}
+.betzone .pbar{background:var(--betink)}
+.betsteps{margin:6px 0 10px;padding-left:20px;display:grid;gap:3px}
+.setupcols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px}
+@media (max-width:820px){.setupcols{grid-template-columns:minmax(0,1fr)}}
+.setup{border-top:4px solid var(--muted)}
+
+.box{border-left:4px solid var(--amber);padding:6px 12px;margin:10px 0;background:var(--bg)}
+#lotcard h4{margin:0 0 6px;font:600 15px var(--f-body)}
+ol.steps ul.sub{margin:4px 0 6px;padding-left:18px;text-indent:0;font-weight:400;display:grid;gap:2px}
+ol.steps ul.sub li{list-style:disc}
+
+.xgroup{margin:20px 0 8px;font-size:15px;color:var(--teal)}
+.xgrid{display:grid;gap:12px}
+.xvar{background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:6px;padding:12px 14px}
+.xvar h4{margin:0 0 6px;font-size:15px}
+.xvar p{margin:4px 0;font-size:13.5px;max-width:none}
+.xvar table{margin-top:8px;font-size:13px}
+.xvar th:first-child{width:24%}
+.gamebar{background:var(--amber-soft);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14px}
+</style>
+<div class="wrap">
+  <header>
+    <h1>Project market, Game A: one firm per round</h1>
+    <div class="gamebar"><b>There are two games.</b> In <b>Game A</b> (this page, the market lab) one firm is sold per round and the operator can switch many rules. <b>Game B</b> (file UDC_W3_practice_market_v8.html) sells every firm on offer at once in each round: teams bid for up to three firms and can pay a secret boost.</div>
+    <p class="lead">One firm is sold each round, most wanted first unless the operator decides otherwise. Every team still without a firm bids or passes; one team wins; the rest pay rent and wait for the next firm. Switch the rules below to try different market designs. Your team's score is the value of the firm you win (from your survey ranking, 0 to 100) plus any leftover points the rules say are worth keeping. Nothing here is saved or counts.</p>
+    <div class="btns"><button id="copyrules" class="ghost">Copy the full rules for an AI chatbot</button></div>
+    <p id="copymsg" class="note" role="status"></p>
+    <textarea id="rulesbox" hidden readonly aria-label="Full rules" style="width:100%;height:220px;font-family:var(--f-mono);font-size:12px"></textarea>
+  </header>
+
+  <section class="panel setup" aria-labelledby="h-setup">
+    <h2 id="h-setup">Set up the game</h2>
+    <p class="note" style="margin:0 0 8px">Choose the market rules and how the six simulated teams behave. Changing anything here starts a new game. Operator mode, at the bottom, uses the same rules.</p>
+    <div class="setupcols">
+      <div>
+      <h3 style="margin-top:0">Market rules</h3>
+      <p class="note" style="margin:0 0 8px"><b>Before the auction</b>, every student has already ranked their seven preferred firms in the survey. These rankings give each team a value for each firm (its favourite firm is 100). The value sets the team's score, and the operator can also use it to weight bids by alignment (Alignment weighting) or to break ties (Most aligned team wins). In this practice lab the rankings are made up; in the real auction they are your survey answers.</p>
+      <div class="oprules" id="rules">
+        <div><label for="r-format">Format</label><select id="r-format"></select></div>
+        <div><label for="r-tie">If the top bids tie</label><select id="r-tie"></select></div>
+        <div><label for="r-price">Price (sealed bids)</label><select id="r-price"></select></div>
+        <div><label for="r-cap">Bid cap</label><select id="r-cap"><option value="100">No cap</option><option value="75">75% of points</option><option value="60">60% of points</option><option value="50">50% of points</option></select></div>
+        <div><label for="r-step">Bids in steps of</label><select id="r-step"><option>1</option><option>5</option><option selected>10</option></select></div>
+        <div><label for="r-min">Minimum bid</label><input id="r-min" type="number" min="1" max="50" value="1"></div>
+        <div><label for="r-demand">Minimum price from survey demand</label><select id="r-demand"><option value="0">Off</option><option value="20">Top firm starts at 20</option><option value="40">Top firm starts at 40</option><option value="60">Top firm starts at 60</option></select></div>
+        <div><label for="r-alignw">Alignment weighting</label><select id="r-alignw"><option value="0">Off</option><option value="1">On: bids count × (0.5 + value ÷ 100)</option></select></div>
+        <div><label for="r-rent">Rent per round</label><input id="r-rent" type="number" min="0" max="40" value="10"></div>
+        <div><label for="r-rise">Rent rises each round by</label><select id="r-rise"><option>0</option><option>5</option><option>10</option></select></div>
+        <div><label for="r-rentcap">Most rent a team can pay</label><select id="r-rentcap"><option>30</option><option selected>50</option><option>80</option><option value="1000">No limit</option></select></div>
+        <div><label for="r-offer">Firms on offer</label><select id="r-offer"><option>8</option><option selected>10</option><option>12</option><option>15</option></select></div>
+        <div><label for="r-order">Order of sale</label><select id="r-order"><option value="popular">Most wanted first</option><option value="least">Least wanted first</option><option value="random">Random order</option></select></div>
+        <div><label for="r-left">Leftover points are worth</label><select id="r-left"><option value="0">Nothing</option><option value="0.5">Half a point each</option><option value="1">A point each</option></select></div>
+      </div>
+      <label for="r-block">Week 3 blocking (teams cannot bid for a firm a member studied in Week 3)</label>
+      <select id="r-block"><option value="on">On: each team has one blocked firm</option><option value="off">Off: no blocked firms for any team</option></select>
+      <label for="excl">Your team's blocked firm</label>
+      <select id="excl"></select>
+      </div>
+      <div>
+      <h3 style="margin-top:0">The other teams</h3>
+      <p class="note" style="margin:0 0 6px">Choose the strategy each simulated team plays, or press Random rivals.</p>
+      <div class="rivals" id="rivals"></div>
+      <div class="btns"><button id="shuffle" class="ghost">Random rivals</button></div>
+
+
+      </div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="panel" aria-labelledby="h-you">
+      <h2 id="h-you">Your team</h2>
+      <p class="box" style="margin-top:0">You are playing <b>Your team (you)</b>, highlighted in yellow in every table. The six other teams (Team 1 to Team 6) are simulated.</p>
+      <p class="note" style="margin:0 0 8px">Where the values come from: in this practice game your team and every other team have four made-up members, each of whom ranked seven firms in a pretend survey (more popular firms are more likely to be picked). A firm's value is the team's total survey points for it, scaled so the team's favourite firm is worth 100. In the real auction the values come from your team's actual survey answers. Open "Your team's values" to see your made-up members' rankings.</p>
+      <div id="lotcard"></div>
+      <label for="bid" id="bidlabel">Your sealed bid (0 = pass)</label>
+      <input id="bid" type="number" min="0" step="1" value="0">
+      <p id="bidhelp" class="note" style="margin-top:4px"></p>
+      <div class="btns"><button id="play">Submit</button><button id="newgame" class="ghost">New game</button></div>
+      <p id="msg" class="note" role="status"></p>
+
+      <details class="work" id="valbox"><summary>Your team's values: where they come from</summary><div id="vallist" class="scroll"></div><div id="memberlist"></div></details>
+
+      <details class="work" id="botbox">
+        <summary>Play with your own chatbot</summary>
+        <p class="note" style="margin-top:6px">Prime a chatbot with the full rules (button at the top), then each round:</p>
+        <label for="botgoal">Your team's goal (optional, sent with every round)</label>
+        <input id="botgoal" placeholder="e.g. We want Anthropic and no other / keep at least 50 points">
+        <div class="btns" style="margin-top:4px"><button id="copyround" class="ghost">Copy this round for the chatbot</button></div>
+        <label for="botreply">Paste the chatbot's reply (it must end with a line like BID: 40 or BID: PASS)</label>
+        <textarea id="botreply" rows="4" style="width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px"></textarea>
+        <div class="btns"><button id="usebid">Use this bid</button></div>
+        <p id="botmsg" class="note" role="status"></p>
+        <textarea id="roundbox" hidden readonly aria-label="This round for the chatbot" style="width:100%;height:180px;font-family:var(--f-mono);font-size:12px"></textarea>
+      </details>
+
+
+    </section>
+
+    <section class="panel" aria-labelledby="h-market" style="min-width:0">
+      <h2 id="h-market">The market</h2>
+      <div id="result"></div>
+
+      <div class="betzone" aria-labelledby="h-bet">
+      <h2 id="h-bet">Side bets: predict the auction</h2>
+      <p class="note">A separate prediction market on how the whole auction will go. It uses separate betting tokens (everyone starts with 100), which never affect who gets a firm.</p>
+      <ol class="betsteps">
+        <li><b>Before round 1:</b> place bets, using what everyone knows: the firms on offer, the order of sale, the rules and survey popularity. Until you submit round 1 you can add to a bet or take it back (Withdraw).</li>
+        <li><b>When you submit round 1:</b> betting closes.</li>
+        <li><b>When the auction ends:</b> all bets are settled and winnings paid out, because every question is about the whole auction. The leaderboard shows everyone's tokens, carried over from game to game.</li>
+      </ol>
+      <p class="note">The six simulated teams bet too. Your team is an insider of a kind: you know how you will bid.</p>
+      <div class="row2">
+        <div><label for="betmode">Betting system</label><select id="betmode"><option value="pool">Pooled betting: winners share the pot</option><option value="lmsr">Live prices, like Polymarket</option></select></div>
+        <div><label for="betcut">Operator's cut (%)</label><input id="betcut" type="number" min="0" max="30" value="5"></div>
+      </div>
+      <p class="note" id="betexplain"></p>
+      <div class="budget"><span>Your betting tokens: <b id="bettokens" class="num">100</b></span><span id="betstatus" class="note"></span></div>
+      <div id="markets"></div>
+      <div id="betlog"></div>
+      <div id="board"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="h-op">
+    <h2 id="h-op">Be the operator</h2>
+    <p>Run 1,000 whole auctions with seven simulated teams under the market rules set above. Each run adds a row, so you can compare designs. Which rules earn the platform most? Which give teams the firms they want? Can you have both?</p>
+    <div class="btns"><button id="o-run">Run 1,000 auctions with the current rules</button><button id="o-clear" class="ghost">Clear the table</button></div>
+    <div id="o-out"></div>
+    <p class="note">The simulated teams follow fixed strategies (they do not learn), but they do respond to the rules: they never bid above the cap or below the minimum, and when leftover points are worth something they bid less. Ask what real teams would do differently.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-explain">
+    <h2 id="h-explain">What the settings mean, and where they are used</h2>
+    <p class="note">Each setting is explained in its own box: first what it is and why it matters, then the choices. Remember that teams have already ranked their preferred firms in the survey before the auction starts, so the operator knows how much each team wants each firm and can use that to price firms, weight bids or break ties. Each choice copies a design used by a real market or platform. The examples are illustrations for discussion, not endorsements, and many real markets mix several designs.</p>
+    <h3 class="xgroup">How firms are sold</h3>
+    <div class="xgrid">
+      <div class="xvar"><h4>Format</h4>
+        <p><b>What it is.</b> How a firm changes hands in each round: secret bids, a falling price, or tickets in a draw.</p>
+        <p><b>Why it matters.</b> The format decides what teams know about each other while bidding and who pays. It changes how cautious or aggressive teams are, and how much the operator collects.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Sealed bids</b></td><td>Each team submits one secret bid; the highest wins.</td><td>Government contracts and procurement tenders; Google and other ad exchanges, which run a sealed auction for every ad shown.</td></tr><tr><td><b>Falling clock (Dutch)</b></td><td>The price starts high and falls until someone stops it; that buyer pays the price at that moment.</td><td>Dutch flower auctions (Royal FloraHolland, Aalsmeer); fish markets; Google&#x27;s 2004 share listing used a modified Dutch auction.</td></tr><tr><td><b>Lottery tickets</b></td><td>Points buy tickets; the winner is drawn in proportion to tickets; everyone pays.</td><td>Raffles and prize draws; loot boxes in games; some blockchains pick who adds the next block in proportion to the coins they stake.</td></tr></table></div></div>
+      <div class="xvar"><h4>Price (sealed bids)</h4>
+        <p><b>What it is.</b> What the winner, and sometimes the losers, actually pay once the bids are opened.</p>
+        <p><b>Why it matters.</b> The price rule decides whether it is safe to bid what a firm is really worth to you. It is also the operator&#x27;s biggest lever on revenue: in the simulations, all-pay raises the operator's share of the points from about 57% (second price) to 88%.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Second-highest bid + 1</b></td><td>The winner pays just enough to beat the runner-up, so bidding what it is really worth to you is safe.</td><td>eBay&#x27;s automatic bidding (you pay one step above the next bid); Google&#x27;s search-ad auction (a second-price design for many years).</td></tr><tr><td><b>Pay your own bid</b></td><td>The winner pays what it bid, so bidders shade their bids down.</td><td>Most display-ad exchanges since Google Ad Manager switched in 2019; many tenders and some government bond auctions.</td></tr><tr><td><b>Everyone pays their bid</b></td><td>Losers lose their bids too (an all-pay contest).</td><td>Lobbying and political campaign spending; races to a patent; penny auctions, where every bid costs money.</td></tr></table></div></div>
+      <div class="xvar"><h4>If the top bids tie</h4>
+        <p><b>What it is.</b> Who gets the firm when two or more teams make the same highest bid.</p>
+        <p><b>Why it matters.</b> Ties are common when bids are round numbers or teams go all in. The tie rule quietly decides who the market favours: the fast, the patient, the keen, the rich or the lucky. Knowing the rule changes how teams bid.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Fastest bid wins</b></td><td>Earlier is better when bids are equal.</td><td>Stock exchanges match orders at the same price by time of arrival (price-time priority), which rewards high-frequency traders; first-come ticket queues.</td></tr><tr><td><b>Tie voids the sale</b></td><td>Nobody wins; the item goes back on sale.</td><td>Auction lots that fail to sell are withdrawn and relisted; tied tenders are re-run.</td></tr><tr><td><b>Most rent paid wins</b></td><td>Rewards those who have waited longest or paid most.</td><td>Waiting lists and housing queues ordered by time waiting; loyalty and status upgrades on airlines.</td></tr><tr><td><b>Most aligned team wins</b></td><td>Of the tied teams, the one with the highest value for the firm (its alignment, from the survey) gets it.</td><td>Matching by stated preference, as in school and university admissions; relevance ranking on platforms.</td></tr><tr><td><b>Most points left wins</b></td><td>The richest bidder wins ties.</td><td>Large investors getting priority allocations in share listings; staking systems where more coins mean more influence.</td></tr><tr><td><b>Re-offer with a higher minimum</b></td><td>Competition raises the reserve price next time.</td><td>Relisting on eBay with a higher reserve; airlines and ticket sellers raising prices when demand shows.</td></tr><tr><td><b>Random draw</b></td><td>Chance decides.</td><td>London Marathon and Wimbledon ballots; lotteries for oversubscribed school places in some areas.</td></tr></table></div></div>
+    </div>
+    <h3 class="xgroup">Limits on bids</h3>
+    <div class="xgrid">
+      <div class="xvar"><h4>Bid cap</h4>
+        <p><b>What it is.</b> The largest share of its current points a team may bid on any one firm.</p>
+        <p><b>Why it matters.</b> Without a cap, keen teams can go all in on the first firm and the auction becomes a contest of nerve. A cap spreads spending across rounds, but also lowers what the operator earns.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>No cap</b></td><td>A team can bid all its points.</td><td>Most open auctions; high-stakes bidding wars.</td></tr><tr><td><b>75%, 60% or 50% of points</b></td><td>No bid above that share of your points.</td><td>Campaign spending limits; daily budget caps in Google Ads; limits of a few tickets per customer.</td></tr></table></div></div>
+      <div class="xvar"><h4>Bids in steps of</h4>
+        <p><b>What it is.</b> The size of the jumps between allowed bids (for example 10, 20, 30).</p>
+        <p><b>Why it matters.</b> Big steps make ties more likely, which brings the tie rule into play; small steps let teams outbid each other by a single point.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>10</b></td><td>Bids must be multiples of 10; ties are common.</td><td>Bid increments at auction houses and on eBay.</td></tr><tr><td><b>5 or 1</b></td><td>Finer bids; fewer ties.</td><td>Minimum price steps (tick sizes) on stock exchanges.</td></tr></table></div></div>
+      <div class="xvar"><h4>Minimum bid</h4>
+        <p><b>What it is.</b> The lowest bid accepted for any firm (a reserve price).</p>
+        <p><b>Why it matters.</b> A reserve stops firms being sold for almost nothing and guarantees the operator some income from every sale.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>1, or any number up to 50</b></td><td>Nothing sells below this.</td><td>Reserve prices at auction houses and on eBay; floor prices in ad exchanges.</td></tr></table></div></div>
+      <div class="xvar"><h4>Minimum price from survey demand</h4>
+        <p><b>What it is.</b> A starting price for each firm set from how popular it was in the survey: the most wanted firm costs most.</p>
+        <p><b>Why it matters.</b> The operator already knows demand from the survey, so it can charge more for popular firms before any bid is made. This raises revenue and steers some teams towards less wanted firms.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Off</b></td><td>Every firm has the same minimum.</td><td>Fixed-price sales.</td></tr><tr><td><b>Top firm starts at 20, 40 or 60</b></td><td>Popular firms start at a higher price; others in proportion to their demand.</td><td>Surge pricing at Uber; dynamic ticket pricing (the 2024 Oasis ticket sale); airline fares that rise with demand.</td></tr></table></div></div>
+      <div class="xvar"><h4>Alignment weighting</h4>
+        <p><b>What it is.</b> Alignment is how much a team wants a firm: its value for that firm, worked out from its members' survey rankings, on a scale where the team's favourite firm is 100. With weighting on, a bid counts as bid × (0.5 + value ÷ 100). A team that values the firm at 100 has its bid counted at 1.5 times; at 50, at face value; at 10, at only 0.6 times. Example: Team A bids 40 and values the firm at 90, so its bid counts as 40 × 1.4 = 56. Team B bids 50 but values the firm at only 30, so its bid counts as 50 × 0.8 = 40. Team A wins with the smaller bid. Teams always pay in real points, not counted points: with second price, Team A pays just enough for its bid to count more than 40, about 30 points.</p>
+        <p><b>Why it matters.</b> Without weighting, the richest or boldest team wins whether or not it really wants the firm. Weighting rewards teams that care most about a firm, and it cuts ties, because equal bids rarely count the same. But the platform decides how much fit counts and measures it with data it holds (here the survey), so it can favour some bidders over others in ways bidders cannot see or check. The same idea appears in the tie rule 'Most aligned team wins', which uses alignment only to break ties.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Off</b></td><td>Only the size of the bid counts.</td><td>Simple highest-bid auctions.</td></tr><tr><td><b>On</b></td><td>A bid counts more if the team values the firm more (bid × quality), so a keen team can beat a richer one.</td><td>Google ranks ads by bid × quality score; Amazon and app stores weigh relevance as well as payment when ranking sponsored listings.</td></tr></table></div></div>
+    </div>
+    <h3 class="xgroup">Rent</h3>
+    <div class="xgrid">
+      <div class="xvar"><h4>Rent per round</h4>
+        <p><b>What it is.</b> Points every team still without a firm pays the operator each round, whether it bid or passed.</p>
+        <p><b>Why it matters.</b> Rent makes waiting costly, so it pushes teams to bid early instead of holding out for a cheap firm. It is steady income for the operator whatever happens in the bidding.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>10 (or any number up to 40)</b></td><td>Every team without a firm pays this each round.</td><td>Seller subscriptions (Amazon&#x27;s monthly fee for professional sellers); Apple&#x27;s yearly developer fee; storage and listing fees.</td></tr></table></div></div>
+      <div class="xvar"><h4>Rent rises each round by</h4>
+        <p><b>What it is.</b> How much the rent goes up each round.</p>
+        <p><b>Why it matters.</b> Rising rent makes each extra round of waiting dearer than the last, which hurts patient teams most.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>0</b></td><td>Rent stays the same.</td><td>Flat fees.</td></tr><tr><td><b>5 or 10</b></td><td>Waiting gets more expensive each round.</td><td>Amazon&#x27;s storage surcharges that rise the longer stock sits in its warehouses; escalating late fees.</td></tr></table></div></div>
+      <div class="xvar"><h4>Most rent a team can pay</h4>
+        <p><b>What it is.</b> The total rent any one team can be charged over the whole auction.</p>
+        <p><b>Why it matters.</b> A rent cap limits what the operator can extract from teams that keep losing, and protects them from being drained before they win anything.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>30, 50 or 80</b></td><td>Rent stops once a team has paid this much.</td><td>Caps on card fees (the EU limits interchange fees); Scotland&#x27;s temporary rent cap of 2022.</td></tr><tr><td><b>No limit</b></td><td>Rent continues until the team wins.</td><td>Uncapped fees and rents.</td></tr></table></div></div>
+    </div>
+    <h3 class="xgroup">The market</h3>
+    <div class="xgrid">
+      <div class="xvar"><h4>Firms on offer</h4>
+        <p><b>What it is.</b> How many firms are put up for sale (the most wanted in the survey).</p>
+        <p><b>Why it matters.</b> This sets how scarce the goods are. With few firms, teams fight over the same ones; with many, most teams can find a firm they like without paying much.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>8, 10, 12 or 15</b></td><td>Fewer firms means more competition and higher prices.</td><td>Spectrum auctions for a fixed number of mobile licences; limited-edition drops.</td></tr></table></div></div>
+      <div class="xvar"><h4>Order of sale</h4>
+        <p><b>What it is.</b> Which firm is sold first, second and so on.</p>
+        <p><b>Why it matters.</b> If the most wanted firm comes first, teams fight hard at the start; if it comes last, they pay rent while they wait. The order shapes who fights, who waits and how much the operator earns.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Most wanted first</b></td><td>The star lot opens the sale.</td><td>Auction houses placing star lots in the running order.</td></tr><tr><td><b>Least wanted first</b></td><td>Popular firms come at the end, after teams have paid rent.</td><td>Draft order in sports leagues, where the weakest pick first.</td></tr><tr><td><b>Random order</b></td><td>Nobody can plan around the order.</td><td>Random draws for running orders.</td></tr></table></div></div>
+      <div class="xvar"><h4>Leftover points are worth</h4>
+        <p><b>What it is.</b> Whether the points a team has left at the end add to its score.</p>
+        <p><b>Why it matters.</b> If leftover points are worthless, there is no reason to save them and teams spend everything. If they count, every point spent has to be worth it, so bids fall.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Nothing</b></td><td>Points not spent are lost.</td><td>Air miles, gift cards and in-game currencies that expire or can only be spent in one place.</td></tr><tr><td><b>Half a point or a point each</b></td><td>Saving points pays.</td><td>Cash, which keeps its value outside any one market.</td></tr></table></div></div>
+      <div class="xvar"><h4>Week 3 blocking</h4>
+        <p><b>What it is.</b> Whether each team is barred from the firm one of its members studied in the Week 3 case study.</p>
+        <p><b>Why it matters.</b> Blocking makes sure students study something new, and it takes some teams out of the race for some firms, which changes the competition for those firms.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>On</b></td><td>Each team has one firm it cannot bid for (you can set yours to none).</td><td>Conflict-of-interest rules that bar some bidders from some contracts.</td></tr><tr><td><b>Off</b></td><td>Every team can bid for every firm.</td><td>Open markets.</td></tr></table></div></div>
+    </div>
+    <h3 class="xgroup">Side bets</h3>
+    <div class="xgrid">
+      <div class="xvar"><h4>Betting system</h4>
+        <p><b>What it is.</b> How bets on the outcome of the auction are priced and paid out. Betting uses separate tokens that never affect who gets a firm.</p>
+        <p><b>Why it matters.</b> The system decides whether odds are set by the crowd&#x27;s stakes at the end or by live prices that move as people buy, and so how much the operator can win or lose.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>Pooled betting</b></td><td>Winners share the pot after the operator&#x27;s cut.</td><td>The Tote in British horse racing and other pari-mutuel pools.</td></tr><tr><td><b>Live prices</b></td><td>An automated market maker sets prices that move as people buy.</td><td>Prediction markets such as Polymarket and Kalshi; automated market makers on crypto exchanges such as Uniswap.</td></tr></table></div></div>
+      <div class="xvar"><h4>Operator&#x27;s cut</h4>
+        <p><b>What it is.</b> The share of each bet or purchase the operator keeps.</p>
+        <p><b>Why it matters.</b> The cut is the platform&#x27;s guaranteed income from betting; a higher cut means smaller payouts for bettors.</p>
+        <div class="scroll"><table><tr><th>Choice</th><th>What it does</th><th>Where it is used</th></tr><tr><td><b>5% (0 to 30%)</b></td><td>The platform&#x27;s share of every bet or trade.</td><td>Bookmakers&#x27; margins; betting-exchange commission (Betfair); the App Store&#x27;s commission on sales.</td></tr></table></div></div>
+    </div>
+  </section>
+</div>
+
+<script type="text/plain" id="rulesmd"># The UDC project market, Game A (market lab, one firm per round): complete rules
+
+Understanding Digital Capitalism (University of Edinburgh), group project, Weeks 3 to 5.
+
+There are two games. This is **Game A**: one firm is sold per round, with many rules the operator can switch. **Game B** sells every firm on offer at once in each round, with a secret boost. This file describes the market so that you, or an AI chatbot you paste it into, can work out bidding strategies and market designs. The points are only for choosing firms. They do not count towards marks.
+
+## 1. The setting
+
+- 7 project teams of about 4 students. Each team must end up with exactly one firm to study; each firm goes to at most one team.
+- The course organiser runs the market and is called the **operator**. Everything teams pay goes to the operator.
+- Each team's **value** for each firm comes from its members' survey rankings: each member ranks 7 firms (1st choice 7 points, 2nd 6, down to 1); the team's total for a firm is scaled so its favourite firm is worth 100.
+- **In the practice lab** the survey is made up: each team (yours included) has four pretend members whose rankings are drawn at random, with popular firms more likely. **In the real auction** the values come from your team's actual survey answers.
+- In the lab you play **Your team (you)**; Team 1 to Team 6 are simulated.
+- A team **cannot bid for a firm a member studied in the Week 3 case study**.
+
+## 2. Points and score
+
+- Every team starts with **100 points**.
+- A team's **score** = the value of the firm it wins + (leftover points × the leftover rate). The leftover rate is a rule: 0 (leftover points are worthless), 0.5 or 1.
+- If leftover points are worthless, there is no reason to save them. If they are worth something, every point spent must be worth it.
+
+## 3. How a round works
+
+- The firms on offer (default: the 10 most wanted in the survey) are sold **one per round**, in an order set by the operator (default: most wanted first).
+- Every team still without a firm either **bids** or **passes**.
+- One team wins the firm. **Every other team still without a firm pays rent** for that round, whether it bid or passed.
+- The auction continues until every team has a firm. If firms run out, teams still without one are given a leftover firm by lot.
+
+## 4. The rules the operator can switch
+
+| Rule | Options (default first) |
+|---|---|
+| Format | **Sealed bids**: each team submits one secret bid. **Falling clock (Dutch)**: the price falls until a team stops it; that team buys at that price. **Lottery tickets**: points buy tickets; the winner is drawn with chance in proportion to tickets; everyone pays for their tickets. |
+| Price (sealed bids) | **Second-highest bid + 1** (never more than your own bid). **Pay your own bid.** **Everyone pays their bid** (all-pay: losers lose their bids too). |
+| If the top bids tie | **Fastest bid wins** (time from the start of the round to submitting). **Tie voids the sale** (nobody wins; the firm is offered again next round; a second tie withdraws it). **Team that has paid most rent wins.** **Most aligned team wins** (highest value for the firm). **Team with most points left wins.** **Re-offer with a higher minimum** (next round's minimum is the tied bid + one step). **Random draw.** |
+| Bid cap | **None**, or at most 75%, 60% or 50% of your current points on any one firm. |
+| Bids in steps of | **10**, 5 or 1. Big steps make ties more likely. |
+| Minimum bid | **1** (any number). |
+| Minimum price from survey demand | **Off**, or the most wanted firm starts at 20, 40 or 60, and other firms in proportion to their demand. |
+| Alignment weighting | Teams have ranked their preferred firms in the survey before the auction, so the operator knows each team's value for each firm. **Off**, or on: a bid counts as bid × (0.5 + the team's value for the firm ÷ 100), so keen teams' bids count more (like Google ranking ads by bid × quality score). You still pay in real points. |
+| Rent per round | **10**, rising by **0**, 5 or 10 each round; a team pays at most **50** rent in total (or 30, 80, no limit). |
+| Firms on offer | **10**, or 8, 12, 15. |
+| Order of sale | **Most wanted first**, least wanted first, or random. |
+| Leftover points are worth | **Nothing**, half a point each, or a point each. |
+| Week 3 blocking | **On** (each team has one firm it cannot bid for; you can set yours to none) or off for every team. |
+
+## 5. Second-price example
+
+Your team bids 60 for TSMC; Team 2 bids 40; nobody else bids. You win and pay 40 + 1 = 41. With alignment weighting, if your value for TSMC is 80 (factor 1.3) your bid counts as 78; Team 2's value is 50 (factor 1.0), so its bid counts as 40; you only needed a bid counting more than 40, i.e. 40 ÷ 1.3 = 30.8, plus 1 = 31.8.
+
+## 6. The simulated teams
+
+| Strategy | What it does |
+|---|---|
+| All-in | Bids everything allowed on its favourite firm still to come; passes the rest |
+| Value bidder | Bids what the firm is worth to it (more when leftover points are worthless) |
+| Shader | Bids 60% of what the firm is worth to it |
+| Patient | Passes the first two rounds unless it loves the firm, then bids |
+| Bargain hunter | Bids 15 on any firm it likes at all |
+| Random | Random amounts, sometimes passes |
+
+They do not learn, but they respect the cap, the minimum and the bid steps.
+
+## 7. Betting on the outcome
+
+A prediction market runs alongside, with separate **betting tokens** (100 to start) that never affect who gets a firm. Bets are placed **before round 1**; until round 1 is submitted you can add to a bet or withdraw it. Betting then closes. All bets are **settled and paid out when the auction ends**, because every question is about the whole auction. A **leaderboard** shows every bettor's tokens (carried over from game to game) and the operator's betting income. You bet on how the whole auction goes, using what everyone knows (the firms on offer, the order of sale, the rules and how popular firms were in the survey):
+
+- Which firm will sell for the highest price?
+- Which firm will attract the most bids (counting every round it is offered)?
+- How many rounds will the auction take? (8 or fewer, 9 or 10, 11 to 13, 14 or more)
+- How many points will the operator collect from the auction? (under 300, 300 to 399, 400 to 499, 500 or more)
+
+The simulated teams bet too, each mixing odds worked out by simulating the whole auction with its own team's tastes. Your team is an insider of a kind: you know how you will bid.
+
+- **Pooled betting**: stakes go into a pot; the operator takes its cut (default 5%); the rest is shared among those who backed the result, in proportion to their stakes.
+- **Live prices (like Polymarket)**: an automated market maker (logarithmic market scoring rule, liquidity 25) sets prices from 0 to 100; buying raises the price; each winning share pays 1 token; the operator takes a cut of each purchase and can lose if bettors know better.
+
+## 8. Being the operator
+
+"Be the operator" runs 1,000 auctions with seven simulated teams under the current rules and adds a row to a table: operator revenue (firm sales, lost bids and tickets, rent), rounds, ties, voided sales, firms given by lot, the average value of the firm each team gets, how many teams get their favourite firm on offer, and the average team score. 7 teams × 100 points = 700 points in the market.
+
+## 9. Playing with your own bot
+
+1. Paste this file into a chatbot. Give it your team's goal, for example: "We want Anthropic and no other." "We don't mind which of TSMC, Kiva or Oura, as cheaply as possible." "Never pay more than 20 rent." "Keep at least half our points."
+2. Each round, press **Copy this round for the chatbot** and paste it in: it gives the firm for sale, its value to you, the minimum, the cap, your points, the firms still to come and every earlier bid.
+3. The chatbot must end its reply with one line: `BID: 40` or `BID: PASS`.
+4. Paste the reply into **Paste the chatbot's reply** and press **Use this bid**, then Submit.
+
+## 10. Questions to ask
+
+- With leftover points worthless, is there any reason not to bid everything? What changes when they are worth something?
+- Which tie rule discourages everyone going all-in on the same firm?
+- Is it better to fight for the first firm or wait for a later one and pay rent?
+- Which rules earn the operator most, and what do they cost teams? Is the most profitable market also the fairest?
+- Is alignment weighting fair, or a way for the platform to pick favourites?
+- Could a team change how it bids to win a bet, for example bidding up the price of a firm it has bet will fetch the most?
+
+## 11. The settings explained, with real-world examples
+
+### Format (how firms are sold)
+
+**What it is.** How a firm changes hands in each round: secret bids, a falling price, or tickets in a draw.
+
+**Why it matters.** The format decides what teams know about each other while bidding and who pays. It changes how cautious or aggressive teams are, and how much the operator collects.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Sealed bids | Each team submits one secret bid; the highest wins. | Government contracts and procurement tenders; Google and other ad exchanges, which run a sealed auction for every ad shown. |
+| Falling clock (Dutch) | The price starts high and falls until someone stops it; that buyer pays the price at that moment. | Dutch flower auctions (Royal FloraHolland, Aalsmeer); fish markets; Google's 2004 share listing used a modified Dutch auction. |
+| Lottery tickets | Points buy tickets; the winner is drawn in proportion to tickets; everyone pays. | Raffles and prize draws; loot boxes in games; some blockchains pick who adds the next block in proportion to the coins they stake. |
+
+### Price (sealed bids) (how firms are sold)
+
+**What it is.** What the winner, and sometimes the losers, actually pay once the bids are opened.
+
+**Why it matters.** The price rule decides whether it is safe to bid what a firm is really worth to you. It is also the operator's biggest lever on revenue: in the simulations, all-pay raises the operator's share of the points from about 57% (second price) to 88%.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Second-highest bid + 1 | The winner pays just enough to beat the runner-up, so bidding what it is really worth to you is safe. | eBay's automatic bidding (you pay one step above the next bid); Google's search-ad auction (a second-price design for many years). |
+| Pay your own bid | The winner pays what it bid, so bidders shade their bids down. | Most display-ad exchanges since Google Ad Manager switched in 2019; many tenders and some government bond auctions. |
+| Everyone pays their bid | Losers lose their bids too (an all-pay contest). | Lobbying and political campaign spending; races to a patent; penny auctions, where every bid costs money. |
+
+### If the top bids tie (how firms are sold)
+
+**What it is.** Who gets the firm when two or more teams make the same highest bid.
+
+**Why it matters.** Ties are common when bids are round numbers or teams go all in. The tie rule quietly decides who the market favours: the fast, the patient, the keen, the rich or the lucky. Knowing the rule changes how teams bid.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Fastest bid wins | Earlier is better when bids are equal. | Stock exchanges match orders at the same price by time of arrival (price-time priority), which rewards high-frequency traders; first-come ticket queues. |
+| Tie voids the sale | Nobody wins; the item goes back on sale. | Auction lots that fail to sell are withdrawn and relisted; tied tenders are re-run. |
+| Most rent paid wins | Rewards those who have waited longest or paid most. | Waiting lists and housing queues ordered by time waiting; loyalty and status upgrades on airlines. |
+| Most aligned team wins | Of the tied teams, the one with the highest value for the firm (its alignment, from the survey) gets it. | Matching by stated preference, as in school and university admissions; relevance ranking on platforms. |
+| Most points left wins | The richest bidder wins ties. | Large investors getting priority allocations in share listings; staking systems where more coins mean more influence. |
+| Re-offer with a higher minimum | Competition raises the reserve price next time. | Relisting on eBay with a higher reserve; airlines and ticket sellers raising prices when demand shows. |
+| Random draw | Chance decides. | London Marathon and Wimbledon ballots; lotteries for oversubscribed school places in some areas. |
+
+### Bid cap (limits on bids)
+
+**What it is.** The largest share of its current points a team may bid on any one firm.
+
+**Why it matters.** Without a cap, keen teams can go all in on the first firm and the auction becomes a contest of nerve. A cap spreads spending across rounds, but also lowers what the operator earns.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| No cap | A team can bid all its points. | Most open auctions; high-stakes bidding wars. |
+| 75%, 60% or 50% of points | No bid above that share of your points. | Campaign spending limits; daily budget caps in Google Ads; limits of a few tickets per customer. |
+
+### Bids in steps of (limits on bids)
+
+**What it is.** The size of the jumps between allowed bids (for example 10, 20, 30).
+
+**Why it matters.** Big steps make ties more likely, which brings the tie rule into play; small steps let teams outbid each other by a single point.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 10 | Bids must be multiples of 10; ties are common. | Bid increments at auction houses and on eBay. |
+| 5 or 1 | Finer bids; fewer ties. | Minimum price steps (tick sizes) on stock exchanges. |
+
+### Minimum bid (limits on bids)
+
+**What it is.** The lowest bid accepted for any firm (a reserve price).
+
+**Why it matters.** A reserve stops firms being sold for almost nothing and guarantees the operator some income from every sale.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 1, or any number up to 50 | Nothing sells below this. | Reserve prices at auction houses and on eBay; floor prices in ad exchanges. |
+
+### Minimum price from survey demand (limits on bids)
+
+**What it is.** A starting price for each firm set from how popular it was in the survey: the most wanted firm costs most.
+
+**Why it matters.** The operator already knows demand from the survey, so it can charge more for popular firms before any bid is made. This raises revenue and steers some teams towards less wanted firms.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Off | Every firm has the same minimum. | Fixed-price sales. |
+| Top firm starts at 20, 40 or 60 | Popular firms start at a higher price; others in proportion to their demand. | Surge pricing at Uber; dynamic ticket pricing (the 2024 Oasis ticket sale); airline fares that rise with demand. |
+
+### Alignment weighting (limits on bids)
+
+**What it is.** Alignment is how much a team wants a firm: its value for that firm, worked out from its members' survey rankings, on a scale where the team's favourite firm is 100. With weighting on, a bid counts as bid × (0.5 + value ÷ 100). A team that values the firm at 100 has its bid counted at 1.5 times; at 50, at face value; at 10, at only 0.6 times. Example: Team A bids 40 and values the firm at 90, so its bid counts as 40 × 1.4 = 56. Team B bids 50 but values the firm at only 30, so its bid counts as 50 × 0.8 = 40. Team A wins with the smaller bid. Teams always pay in real points, not counted points: with second price, Team A pays just enough for its bid to count more than 40, about 30 points.
+
+**Why it matters.** Without weighting, the richest or boldest team wins whether or not it really wants the firm. Weighting rewards teams that care most about a firm, and it cuts ties, because equal bids rarely count the same. But the platform decides how much fit counts and measures it with data it holds (here the survey), so it can favour some bidders over others in ways bidders cannot see or check. The same idea appears in the tie rule 'Most aligned team wins', which uses alignment only to break ties.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Off | Only the size of the bid counts. | Simple highest-bid auctions. |
+| On | A bid counts more if the team values the firm more (bid × quality), so a keen team can beat a richer one. | Google ranks ads by bid × quality score; Amazon and app stores weigh relevance as well as payment when ranking sponsored listings. |
+
+### Rent per round (rent)
+
+**What it is.** Points every team still without a firm pays the operator each round, whether it bid or passed.
+
+**Why it matters.** Rent makes waiting costly, so it pushes teams to bid early instead of holding out for a cheap firm. It is steady income for the operator whatever happens in the bidding.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 10 (or any number up to 40) | Every team without a firm pays this each round. | Seller subscriptions (Amazon's monthly fee for professional sellers); Apple's yearly developer fee; storage and listing fees. |
+
+### Rent rises each round by (rent)
+
+**What it is.** How much the rent goes up each round.
+
+**Why it matters.** Rising rent makes each extra round of waiting dearer than the last, which hurts patient teams most.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 0 | Rent stays the same. | Flat fees. |
+| 5 or 10 | Waiting gets more expensive each round. | Amazon's storage surcharges that rise the longer stock sits in its warehouses; escalating late fees. |
+
+### Most rent a team can pay (rent)
+
+**What it is.** The total rent any one team can be charged over the whole auction.
+
+**Why it matters.** A rent cap limits what the operator can extract from teams that keep losing, and protects them from being drained before they win anything.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 30, 50 or 80 | Rent stops once a team has paid this much. | Caps on card fees (the EU limits interchange fees); Scotland's temporary rent cap of 2022. |
+| No limit | Rent continues until the team wins. | Uncapped fees and rents. |
+
+### Firms on offer (the market)
+
+**What it is.** How many firms are put up for sale (the most wanted in the survey).
+
+**Why it matters.** This sets how scarce the goods are. With few firms, teams fight over the same ones; with many, most teams can find a firm they like without paying much.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 8, 10, 12 or 15 | Fewer firms means more competition and higher prices. | Spectrum auctions for a fixed number of mobile licences; limited-edition drops. |
+
+### Order of sale (the market)
+
+**What it is.** Which firm is sold first, second and so on.
+
+**Why it matters.** If the most wanted firm comes first, teams fight hard at the start; if it comes last, they pay rent while they wait. The order shapes who fights, who waits and how much the operator earns.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Most wanted first | The star lot opens the sale. | Auction houses placing star lots in the running order. |
+| Least wanted first | Popular firms come at the end, after teams have paid rent. | Draft order in sports leagues, where the weakest pick first. |
+| Random order | Nobody can plan around the order. | Random draws for running orders. |
+
+### Leftover points are worth (the market)
+
+**What it is.** Whether the points a team has left at the end add to its score.
+
+**Why it matters.** If leftover points are worthless, there is no reason to save them and teams spend everything. If they count, every point spent has to be worth it, so bids fall.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Nothing | Points not spent are lost. | Air miles, gift cards and in-game currencies that expire or can only be spent in one place. |
+| Half a point or a point each | Saving points pays. | Cash, which keeps its value outside any one market. |
+
+### Week 3 blocking (the market)
+
+**What it is.** Whether each team is barred from the firm one of its members studied in the Week 3 case study.
+
+**Why it matters.** Blocking makes sure students study something new, and it takes some teams out of the race for some firms, which changes the competition for those firms.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| On | Each team has one firm it cannot bid for (you can set yours to none). | Conflict-of-interest rules that bar some bidders from some contracts. |
+| Off | Every team can bid for every firm. | Open markets. |
+
+### Betting system (side bets)
+
+**What it is.** How bets on the outcome of the auction are priced and paid out. Betting uses separate tokens that never affect who gets a firm.
+
+**Why it matters.** The system decides whether odds are set by the crowd's stakes at the end or by live prices that move as people buy, and so how much the operator can win or lose.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| Pooled betting | Winners share the pot after the operator's cut. | The Tote in British horse racing and other pari-mutuel pools. |
+| Live prices | An automated market maker sets prices that move as people buy. | Prediction markets such as Polymarket and Kalshi; automated market makers on crypto exchanges such as Uniswap. |
+
+### Operator's cut (side bets)
+
+**What it is.** The share of each bet or purchase the operator keeps.
+
+**Why it matters.** The cut is the platform's guaranteed income from betting; a higher cut means smaller payouts for bettors.
+
+| Choice | What it does | Where it is used |
+|---|---|---|
+| 5% (0 to 30%) | The platform's share of every bet or trade. | Bookmakers' margins; betting-exchange commission (Betfair); the App Store's commission on sales. |
+</script>
+<script>
+const FIRMS="Palantir|Anthropic|SoftBank|Scattered Spider|Ant Group|Hugging Face|Blue Yonder and project44|Telegram|Baillie Gifford|Bloomberg|Polymarket and Kalshi|Binance|Finding alpha: satellites and alternative data|Safaricom and M-Pesa|Sama and Scale AI|TSMC|Shein and Temu|Seeking Alpha|Tencent and WeChat|Google DeepMind|Blackboard (Anthology)|Clearview AI|Workday and AI hiring|Cybercrime as a service|Oura|Facebook and Instagram (Meta)|Compute markets|Bending Spoons|King and Tripledot|Kiva".split('|');
+const DESC=["Data platforms (Gotham, Foundry, AIP) sold to governments, armies and the NHS.", "AI lab selling its Claude models to businesses and developers.", "Japanese investor betting on AI through the Vision Fund, Arm and Stargate.", "Hacking group using phone scams to break into firms such as M&S and Co-op.", "Alibaba's finance arm behind Alipay; its 2020 share listing was halted by regulators.", "Online hub where open AI models and datasets are shared.", "Software that plans and tracks global supply chains and freight.", "Messaging app with mass channels and crypto links; its founder was arrested in France in 2024.", "Edinburgh fund manager backing tech growth firms; its festival sponsorships faced boycotts.", "Terminals and data that much of the financial world runs on.", "Prediction markets where people bet on elections, prices and events.", "The world's largest crypto exchange; settled US money-laundering charges in 2023.", "Satellite images and other alternative data sold to investors.", "Kenyan mobile operator whose phone money became a banking system.", "Firms supplying the human data labelling behind AI models.", "Taiwanese firm that makes most of the world's advanced chips.", "Ultra-cheap online shops shipping direct from China.", "Crowd-written investment research and stock analysis site.", "Chinese super-app for messaging, payments and everyday services.", "Google's AI research lab (AlphaFold, Gemini).", "Learning platform used by universities, including Edinburgh's Learn.", "Facial recognition built from scraped photos and sold to police.", "HR software that screens job applicants; sued for discrimination.", "Ransomware and phishing kits rented out like software.", "Smart ring that tracks sleep and health data.", "Social media paid for by targeted advertising.", "Markets where computing power (GPUs) is bought and sold like a commodity.", "Italian firm that buys apps (Evernote, Vimeo, AOL) and cuts their costs.", "Mobile games: the Candy Crush maker and a studio founded by its former staff.", "Website where people lend small sums to entrepreneurs around the world."];
+const LAB=FIRMS.map((f,i)=>`${i+1}. ${f}`);
+const STRATS={
+  spread:{name:'Spreader',desc:'Evenly over five liked firms'},
+  allin:{name:'All-in',desc:'Everything on its favourite'},
+  booster:{name:'Booster',desc:'Pays a 20-point boost, then two firms'},
+  bargain:{name:'Bargain hunter',desc:'Avoids the most popular firms'},
+  heavy:{name:'Top-heavy',desc:'60 on favourite, rest spread'},
+  random:{name:'Random',desc:'Random firms and amounts'}
+};
+const $=id=>document.getElementById(id);
+let rng=Math.random;
+function seeded(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function pick(w,R=rng){let s=w.reduce((a,b)=>a+b,0),r=R()*s;for(let i=0;i<w.length;i++){r-=w[i];if(r<=0)return i}return w.length-1}
+function popularity(R=rng){return FIRMS.map((_,i)=>1/Math.pow(1+((i*7+Math.floor(R()*30))%30),1.5))}
+function likes(pop,n,R=rng,invert=false){const w=pop.map(x=>invert?1/x:x),out=[];while(out.length<n){const i=pick(w,R);if(!out.includes(i))out.push(i)}return out}
+
+
+// ================= One-firm-per-round market engine =================
+const BOTS={
+  allin:{name:'All-in',desc:'Bids everything allowed on its favourite lot still to come; passes the rest'},
+  value:{name:'Value bidder',desc:'Bids what the firm is worth to it'},
+  shade:{name:'Shader',desc:'Bids 60% of what the firm is worth to it'},
+  patient:{name:'Patient',desc:'Passes the first two rounds unless it loves the firm, then bids'},
+  bargain:{name:'Bargain hunter',desc:'Small bids (15) on any firm it likes at all'},
+  random:{name:'Random',desc:'Random amounts, sometimes passes'}
+};
+const FORMATS={sealed:'Sealed bids',dutch:'Falling clock (Dutch)',lottery:'Lottery tickets'};
+const TIES={speed:'Fastest bid wins',void:'Tie voids the sale',fair:'Team that has paid most rent wins',align:'Most aligned team wins',wealth:'Team with most points left wins',reserve:'Re-offer with a higher minimum',random:'Random draw'};
+const PRICES={second:'Second-highest bid + 1',first:'Pay your own bid',allpay:'Everyone pays their bid'};
+const fmt=x=>+(+x).toFixed(1);
+const tname=id=>id==='you'?'Your team (you)':'Team '+id;
+
+// survey: each team has 4 members, each ranks 7 firms; value 0-100 = team score / best possible
+function makeValues(pop,R){
+  const sc=Array(30).fill(0),members=[];
+  for(let m=0;m<4;m++){const L=likes(pop,7,R);members.push(L);L.forEach((f,k)=>sc[f]+=7-k)}
+  const mx=Math.max(...sc)||1;return{align:sc,val:sc.map(x=>Math.round(100*x/mx)),members,best:mx};
+}
+function rentFor(rules,round){return rules.rent+rules.rise*(round-1)}
+function allowedBid(t,rules){return Math.max(0,Math.floor(t.points*rules.cap/100))}
+function roundTo(x,step){return Math.floor(x/step)*step}
+
+// a simulated team's bid for the current lot (0 = pass)
+function botBidLot(t,lot,round,remaining,rules,R){
+  const V=t.val[lot],allowed=allowedBid(t,rules),w=rules.leftW;
+  if(V<=0||t.excl.includes(lot))return 0;
+  const worth=w>0?Math.min(allowed,V/w):allowed*V/100;
+  const best=Math.max(...remaining.filter(f=>!t.excl.includes(f)).map(f=>t.val[f]));
+  let b=0;
+  switch(t.strat){
+    case 'allin':b=V>=best?allowed:0;break;
+    case 'value':b=worth;break;
+    case 'shade':b=0.6*worth;break;
+    case 'patient':b=(round<=2&&V<85)?0:0.75*worth;break;
+    case 'bargain':b=Math.min(allowed,15);break;
+    default:b=R()<0.65?R()*allowed:0;
+  }
+  b=roundTo(Math.min(b,allowed),rules.step);
+  return b>=Math.max(rules.minBid,rules.step)?b:0;
+}
+
+// resolve one round. teams: unplaced + placed; bids {id:{p,time}}; returns result with steps
+function resolveLot(S,bids,rules,R){
+  const lot=S.queue[0],round=S.round,steps=[],ledger=[],open=S.teams.filter(t=>t.won==null);
+  const minNow=Math.max(rules.minBid,S.reserve[lot]||0,S.demand[lot]||0);
+  const res={lot,winner:null,tie:false,voided:false,withdrawn:false,steps,ledger,rows:[],price:0};
+  steps.push({k:'head',t:`Lot: ${LAB[lot]}. Format: ${FORMATS[rules.format]}. ${minNow>1?`Minimum bid ${minNow}${S.demand[lot]>=minNow&&S.demand[lot]>rules.minBid?' (set from survey demand)':''}. `:''}${rules.cap<100?`No team may bid more than ${rules.cap}% of its points. `:''}`});
+  const valid=[];
+  for(const t of open){
+    const b=bids[t.id]||{p:0,time:999};let p=b.p||0;
+    if(p>0&&t.excl.includes(lot)){steps.push({k:'skip',t:`${tname(t.id)}: bid ignored (a member studied this firm in Week 3).`});p=0}
+    const al=allowedBid(t,rules);if(p>al){steps.push({k:'skip',t:`${tname(t.id)}: bid of ${p} cut to ${al}, the cap.`});p=al}
+    if(p>0&&p<minNow){steps.push({k:'skip',t:`${tname(t.id)}: bid of ${p} is below the minimum of ${minNow}, so it counts as a pass.`});p=0}
+    const factor=rules.alignW?0.5+t.val[lot]/100:1;
+    res.rows.push({team:t.id,p,time:b.time,eff:p*factor,factor});
+    if(p>0)valid.push({t,p,time:b.time,eff:p*factor,factor});
+  }
+  if(rules.alignW&&valid.length)steps.push({k:'head',t:`Alignment weighting is on: each bid counts as bid × (0.5 + the team's value for this firm ÷ 100).`});
+  const payRent=(exceptId)=>{for(const t of open){if(t.id===exceptId)continue;const r=Math.max(0,Math.min(rentFor(rules,round),t.points,rules.rentCap-t.rent));if(r>0){t.points-=r;t.rent+=r;ledger.push([t.id,'Rent',r]);steps.push({k:'pay',t:`${tname(t.id)} has no firm yet and pays ${fmt(r)} rent.`})}}};
+  if(!valid.length){
+    res.withdrawn=true;steps.push({k:'skip',t:`Nobody bid. ${LAB[lot]} is withdrawn unsold.`});payRent(null);return res;
+  }
+  valid.sort((a,b)=>b.eff-a.eff||a.time-b.time);
+  steps.push({k:'head',t:'Bids, largest first: '+valid.map(v=>`${tname(v.t.id)} ${fmt(v.p)}${v.factor!==1?` (counts ${fmt(v.eff)})`:''}${rules.tie==='speed'&&rules.format!=='lottery'?` at ${v.time}s`:''}`).join('; ')+'.'});
+  let win=null;
+  if(rules.format==='lottery'){
+    const tot=valid.reduce((a,v)=>a+v.eff,0);let r=R()*tot;for(const v of valid){r-=v.eff;if(r<=0){win=v;break}}win=win||valid[0];
+    steps.push({k:'head',t:`Draw: ${valid.map(v=>`${tname(v.t.id)} ${Math.round(100*v.eff/tot)}% chance`).join(', ')}.`});
+  }else{
+    const top=valid[0].eff,tied=valid.filter(v=>Math.abs(v.eff-top)<1e-9);
+    if(tied.length>1){
+      res.tie=true;const names=tied.map(v=>tname(v.t.id)).join(', ');
+      const by=(f,desc)=>{const s=tied.slice().sort(f);if(s.length>1&&f(s[0],s[1])===0)return{v:s[Math.floor(R()*s.filter(x=>f(x,s[0])===0).length)],note:` ${desc} were level too, so a draw decided.`};return{v:s[0],note:''}};
+      let pick=null,how='';
+      switch(rules.tie){
+        case 'speed':{const r=by((a,b)=>a.time-b.time,'times');pick=r.v;how=`the fastest bid (${pick.time}s) wins.${r.note}`;break}
+        case 'fair':{const r=by((a,b)=>b.t.rent-a.t.rent,'rent payments');pick=r.v;how=`the team that has paid most rent (${fmt(pick.t.rent)}) wins.${r.note}`;break}
+        case 'align':{const r=by((a,b)=>b.t.val[lot]-a.t.val[lot],'values');pick=r.v;how=`the most aligned team (value ${pick.t.val[lot]}) wins.${r.note}`;break}
+        case 'wealth':{const r=by((a,b)=>b.t.points-a.t.points,'points');pick=r.v;how=`the team with most points left (${fmt(pick.t.points)}) wins.${r.note}`;break}
+        case 'random':{pick=tied[Math.floor(R()*tied.length)];how='a random draw decides.';break}
+        case 'void':{S.voids[lot]=(S.voids[lot]||0)+1;res.voided=true;
+          if(S.voids[lot]>=2){res.withdrawn=true;steps.push({k:'win',t:`TIE between ${names} at ${fmt(top)}. The tie voids the sale. This firm has now been tied twice, so it is withdrawn unsold.`})}
+          else steps.push({k:'win',t:`TIE between ${names} at ${fmt(top)}. The tie voids the sale: nobody wins, and ${LAB[lot]} is offered again next round.`});
+          payRent(null);return res}
+        case 'reserve':{S.reserve[lot]=roundTo(valid[0].p,rules.step)+rules.step;res.voided=true;
+          steps.push({k:'win',t:`TIE between ${names} at ${fmt(top)}. Nobody wins this round. ${LAB[lot]} is offered again next round with a minimum bid of ${S.reserve[lot]}.`});
+          payRent(null);return res}
+      }
+      steps.push({k:'head',t:`TIE between ${names} at ${fmt(top)}: ${how}`});
+      win=pick;
+    }else win=valid[0];
+  }
+  // price
+  const t=win.t,others=valid.filter(v=>v!==win);let price=win.p,sub=[];
+  if(rules.format==='lottery'){
+    sub.push(`Every team pays for its tickets, win or lose.`);
+    for(const v of others){v.t.points-=v.p;v.t.spentLost=(v.t.spentLost||0)+v.p;ledger.push([v.t.id,'Lottery tickets (lost)',v.p])}
+  }else if(rules.format==='dutch'){
+    sub.push(`The clock fell until ${tname(t.id)} stopped it at ${fmt(win.p)}, so it pays ${fmt(win.p)}.`);
+  }else if(rules.price==='first'){sub.push(`Rule: winners pay their own bid: ${fmt(price)}.`)}
+  else if(rules.price==='allpay'){sub.push(`Rule: everyone pays their bid. ${tname(t.id)} pays ${fmt(price)}; the losing bidders lose theirs too.`);
+    for(const v of others){v.t.points-=v.p;v.t.spentLost=(v.t.spentLost||0)+v.p;ledger.push([v.t.id,'Losing bid (all-pay)',v.p]);steps.push({k:'pay',t:`${tname(v.t.id)} loses its bid of ${fmt(v.p)}.`})}}
+  else{
+    if(!others.length){price=Math.max(1,minNow);sub.push(`Nobody else bid, so it pays the minimum: ${fmt(price)}.`)}
+    else{const rv=others[0],need=rv.eff/win.factor;price=Math.min(win.p,Math.max(minNow,need+1));
+      sub.push(`Best rival: ${tname(rv.t.id)} ${fmt(rv.p)}${rv.factor!==1?` (counts ${fmt(rv.eff)})`:''}.`);
+      sub.push(win.factor!==1?`To beat it, ${tname(t.id)} needed a bid counting more than ${fmt(rv.eff)}: ${fmt(rv.eff)} ÷ ${win.factor.toFixed(2)} = ${fmt(need)}, plus 1 = ${fmt(need+1)}.`:`It pays the rival's bid + 1 = ${fmt(need+1)}.`);
+      if(need+1>win.p)sub.push(`That is more than it bid (a tie), so it pays its own ${fmt(win.p)}.`);}
+  }
+  price=fmt(price);t.points-=price;t.paid=price;t.won=lot;res.winner=t.id;res.price=price;
+  ledger.push([t.id,'Paid for '+LAB[lot],price]);
+  const r=res.rows.find(x=>x.team===t.id);if(r)r.won=true;
+  steps.push({k:'win',t:`${tname(t.id)} WINS ${LAB[lot]} and pays ${fmt(price)}.`,sub});
+  payRent(t.id);
+  return res;
+}
+
+function newState(rules,strats,R,playerExcl){
+  const pop=popularity(R);
+  const order=FIRMS.map((_,i)=>i).sort((a,b)=>pop[b]-pop[a]);
+  let lots=order.slice(0,rules.offer);
+  if(rules.order==='least')lots=lots.slice().reverse();
+  if(rules.order==='random')lots=lots.map(f=>[R(),f]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+  const mk=(id,strat)=>{const v=makeValues(pop,R);return{id,strat,points:100,won:null,paid:0,rent:0,spentLost:0,val:v.val,align:v.align,members:v.members,best:v.best,excl:[]}};
+  const teams=[mk('you','human')].concat(strats.map((s,i)=>mk(String(i+1),s)));
+  teams.forEach(t=>{if(rules.block===false)t.excl=[];else if(t.id==='you'&&playerExcl!=null)t.excl=playerExcl>=0?[playerExcl]:[];else t.excl=[order[7+Math.floor(R()*10)]]});
+  // demand-based reserve prices: the most wanted lot starts at rules.demandRes, others in proportion to survey demand
+  const demand={};if(rules.demandRes>0){const mx=Math.max(...lots.map(f=>pop[f]));for(const f of lots)demand[f]=Math.max(rules.minBid,roundTo(rules.demandRes*pop[f]/mx,rules.step))}
+  return{pop,lots,queue:lots.slice(),teams,round:1,reserve:{},voids:{},demand,history:[],ledger:[],done:false,notes:[]};
+}
+function finishIfNeeded(S,rules,R){
+  const open=S.teams.filter(t=>t.won==null);
+  if(!open.length){S.done=true;return}
+  if(!S.queue.length||S.round>rules.maxRounds){
+    const used=new Set(S.teams.filter(t=>t.won!=null).map(t=>t.won));
+    for(const t of open){const free=FIRMS.map((_,i)=>i).filter(f=>!used.has(f)&&!t.excl.includes(f));const f=free[Math.floor(R()*free.length)];used.add(f);t.won=f;t.paid=0;S.notes.push(`${tname(t.id)} had no firm when the lots ran out and was given ${LAB[f]} by lot.`)}
+    S.done=true;
+  }
+}
+function stepRound(S,rules,bids,R){
+  const res=resolveLot(S,bids,rules,R);
+  if(res.winner||res.withdrawn)S.queue.shift();
+  S.history.push({round:S.round,res});S.ledger.push(...res.ledger.map(l=>[S.round,...l]));
+  S.round++;finishIfNeeded(S,rules,R);return res;
+}
+function score(t,rules){return(t.won!=null?t.val[t.won]:0)+rules.leftW*t.points}
+function botBids(S,rules,R,includeYouAs){
+  const B={},rem=S.queue;
+  for(const t of S.teams)if(t.won==null&&(t.id!=='you'||includeYouAs)){
+    const strat=t.id==='you'?includeYouAs:t.strat;const tt=t.id==='you'?{...t,strat}:t;
+    B[t.id]={p:botBidLot(tt,rem[0],S.round,rem,rules,R),time:Math.round(3+R()*57)};
+  }
+  return B;
+}
+function cloneState(S){return{...S,queue:S.queue.slice(),teams:S.teams.map(t=>({...t,excl:t.excl.slice()})),reserve:{...S.reserve},voids:{...S.voids},demand:{...S.demand},history:[],ledger:[],notes:[]}}
+
+// operator mode: run many whole auctions with simulated teams only
+function opSim(rules,N,seed){
+  const R=seeded(seed||2026),keys=Object.keys(BOTS),o={sale:0,lost:0,rent:0,rounds:0,ties:0,voids:0,withdrawn:0,lot:0,score:0,value:0,top:0,left:0};
+  for(let n=0;n<N;n++){
+    const S=newState(rules,Array.from({length:6},()=>keys[Math.floor(R()*keys.length)]),R,null);
+    S.teams[0].strat=keys[Math.floor(R()*keys.length)];
+    let guard=0;
+    while(!S.done&&guard++<60){const B=botBids(S,rules,R,S.teams[0].strat);const res=stepRound(S,rules,B,R);if(res.tie)o.ties++;if(res.voided)o.voids++;if(res.withdrawn&&!res.voided)o.withdrawn++}
+    for(const l of S.ledger){if(l[2]==='Rent')o.rent+=l[3];else if(String(l[2]).startsWith('Paid'))o.sale+=l[3];else o.lost+=l[3]}
+    o.rounds+=S.round-1;o.lot+=S.notes.length;
+    for(const t of S.teams){o.score+=score(t,rules);o.value+=t.won!=null?t.val[t.won]:0;o.left+=t.points;
+      const best=Math.max(...S.lots.filter(f=>!t.excl.includes(f)).map(f=>t.val[f]));if(t.won!=null&&t.val[t.won]>=best)o.top++}
+  }
+  const T=7*N;
+  return{rules:{...rules},total:(o.sale+o.lost+o.rent)/N,sale:o.sale/N,lost:o.lost/N,rent:o.rent/N,rounds:o.rounds/N,ties:o.ties/N,voids:o.voids/N,lotGiven:o.lot/N,score:o.score/T,value:o.value/T,top:100*o.top/T,left:o.left/T};
+}
+
+// ================= page =================
+const CFG=window.PRACTICE_CONFIG||null;
+let S,RULES,shownAt=Date.now();
+const fill=(id,obj,def)=>{$(id).innerHTML=Object.entries(obj).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');$(id).value=def};
+fill('r-format',FORMATS,'sealed');fill('r-tie',TIES,'speed');fill('r-price',PRICES,'second');
+function readRules(){return{format:$('r-format').value,tie:$('r-tie').value,price:$('r-price').value,cap:+$('r-cap').value,step:+$('r-step').value,minBid:Math.max(1,+$('r-min').value||1),
+  demandRes:+$('r-demand').value,alignW:$('r-alignw').value==='1',rent:Math.max(0,+$('r-rent').value||0),rise:+$('r-rise').value,rentCap:+$('r-rentcap').value,offer:+$('r-offer').value,order:$('r-order').value,leftW:+$('r-left').value,block:$('r-block').value==='on',maxRounds:20}}
+function rivalStrats(){return[...document.querySelectorAll('.rival select')].map(s=>s.value)}
+function me(){return S.teams[0]}
+
+function newGame(){
+  RULES=readRules();refundOpen();
+  S=newState(RULES,rivalStrats(),rng,+$('excl').value);
+  shownAt=Date.now();$('result').innerHTML='<p class="note">New game. Seven teams, '+S.lots.length+' firms on offer, one sold each round. Your values for the firms are under "Your team\'s values".</p>';
+  $('bid').value=0;$('msg').textContent='';renderAll();openMarkets();
+}
+function lotInfo(){
+  if(S.done)return null;const lot=S.queue[0],t=me();
+  return{lot,V:t.val[lot],min:Math.max(RULES.minBid,S.reserve[lot]||0,S.demand[lot]||0),allowed:allowedBid(t,RULES),rent:Math.min(rentFor(RULES,S.round),Math.max(0,RULES.rentCap-t.rent),t.points),excluded:t.excl.includes(lot)};
+}
+function renderAll(){
+  const t=me(),L=lotInfo();
+  const sc=score(t,RULES);
+  let h=`<div class="budget"><span>Round <b class="num">${S.round}</b></span><span>Points left: <b class="num">${fmt(t.points)}</b></span></div>`;
+  h+=`<p class="note" style="margin:4px 0 0">Every team starts with 100 points${t.rent?`, minus ${fmt(t.rent)} rent`:''}${t.spentLost?`, minus ${fmt(t.spentLost)} in lost bids or tickets`:''}${t.won!=null?`, minus ${fmt(t.paid)} paid for your firm`:''}.</p>`;
+  if(t.won!=null)h+=`<div class="box" style="margin-top:8px">Your team has <b>${LAB[t.won]}</b> (value ${t.val[t.won]}). Score: ${fmt(sc)}${RULES.leftW?` = ${t.val[t.won]} + ${RULES.leftW} × ${fmt(t.points)} leftover points`:''}.${S.done?'':' Press Submit to watch the remaining rounds.'}</div>`;
+  else if(L)h+=`<div class="mkt" style="margin-top:8px"><h4>For sale this round: ${LAB[L.lot]}</h4><p class="note" style="margin:-2px 0 6px">${DESC[L.lot]}</p><p style="margin:0">Value to your team: <b>${L.V}</b> of 100 (${t.align[L.lot]} survey points; your favourite has ${t.best}). Minimum bid: <b>${L.min}</b>${S.demand[L.lot]>=L.min&&S.demand[L.lot]>RULES.minBid?' (set from survey demand)':''}${S.reserve[L.lot]?' (raised after a tie)':''}. Most you may bid: <b>${L.allowed}</b>${RULES.cap<100?` (${RULES.cap}% cap)`:''}. If you do not win you pay <b>${fmt(L.rent)}</b> rent.${L.excluded?' <b>Your team cannot bid for this firm</b> (studied in Week 3).':''}</p><p class="note" style="margin:4px 0 0">Next: ${S.queue.slice(1,4).map(f=>LAB[f]+' ('+t.val[f]+')').join(', ')||'no more firms'}.</p></div>`;
+  if(S.done)h+=`<div class="box">The auction is over. Your score: ${fmt(sc)}. Start a new game to try again.</div>`;
+  $('lotcard').innerHTML=h;
+  const f=RULES.format;
+  $('bidlabel').textContent=f==='dutch'?'Stop the clock at (the highest price you will pay; 0 = pass)':f==='lottery'?'Lottery tickets to buy (0 = pass)':'Your sealed bid (0 = pass)';
+  $('bidhelp').textContent=f==='dutch'?'The price starts high and falls. The first team whose stopping price is reached buys at that price.':f==='lottery'?'Your chance of winning is your tickets divided by all tickets bought. Every team pays for its tickets, win or lose.':`${PRICES[RULES.price]}. Ties: ${TIES[RULES.tie].toLowerCase()}.${RULES.tie==='speed'?' Your time is how long you take from the start of the round to pressing Submit.':''}`;
+  $('bid').step=RULES.step;$('bid').disabled=S.done||t.won!=null;
+  $('play').textContent=S.done?'Submit':t.won!=null?'Next round':'Submit';$('play').disabled=S.done;
+  // values list
+  $('vallist').innerHTML=`<table><tr><th>Firm (in order of sale)</th><th>Value</th><th>Status</th></tr>${S.lots.map((l,i)=>{const w=S.teams.find(x=>x.won===l);const st=w?(w.id==='you'?'<b>Yours</b>':`Sold to Team ${w.id}`):S.queue[0]===l&&!S.done?'<b>For sale now</b>':S.queue.includes(l)?'To come':'Withdrawn';return `<tr><td>${LAB[l]}</td><td class="n">${t.val[l]}<br><span class="note">${t.align[l]} pts</span></td><td>${st}</td></tr>`}).join('')}</table>`;
+  $('memberlist').innerHTML=`<p class="note" style="margin-top:8px">Your four made-up members' survey rankings, 1st to 7th (1st choice = 7 points, down to 7th = 1 point). A firm's value = your team's points for it ÷ ${t.best} (the points of your favourite) × 100.</p><ol class="steps" style="list-style:none">${t.members.map((L,i)=>`<li><b>Member ${i+1}:</b> ${L.map(f=>FIRMS[f]).join(' · ')}</li>`).join('')}</ol>`;
+  renderResult();renderBets();
+}
+function renderResult(){
+  if(!S.history.length){return}
+  const op=S.ledger.reduce((a,l)=>a+l[3],0);
+  let h=`<div class="stats"><div class="stat"><b>${S.done?'Finished':'Round '+S.round}</b><span>${S.teams.filter(t=>t.won!=null).length} of 7 teams have a firm</span></div><div class="stat"><b class="op">${fmt(op)}</b><span>points collected by the operator (of 700)</span></div></div>`;
+  for(const hr of S.history.slice().reverse()){
+    const r=hr.res,res=r.winner?`${tname(r.winner)} won for ${fmt(r.price)}`:r.voided?(r.withdrawn?'Tie: withdrawn':'Tie: no sale'):'No bids: withdrawn';
+    h+=`<h3>Round ${hr.round}: ${LAB[r.lot]} · ${res}</h3><div class="scroll"><table><tr><th>Team</th><th>Bid</th>${RULES.alignW?'<th>Counts as</th>':''}${RULES.tie==='speed'&&RULES.format!=='lottery'?'<th>Time</th>':''}<th>Value</th></tr>${r.rows.slice().sort((a,b)=>b.eff-a.eff).map(x=>{const tm=S.teams.find(t=>t.id===x.team);return `<tr><td class="${x.team==='you'?'you':''}">${tname(x.team)}</td><td class="n ${x.won?'win':''}">${x.p?fmt(x.p):'pass'}</td>${RULES.alignW?`<td class="n">${x.p?fmt(x.eff):''}</td>`:''}${RULES.tie==='speed'&&RULES.format!=='lottery'?`<td class="n">${x.p?x.time+'s':''}</td>`:''}<td class="n">${tm.val[r.lot]}</td></tr>`}).join('')}</table></div>`;
+    h+=`<details class="work" ${hr===S.history.at(-1)?'open':''}><summary>How round ${hr.round} was decided</summary><ol class="steps">${r.steps.map(st=>`<li class="${st.k}">${st.t}${st.sub&&st.sub.length?`<ul class="sub">${st.sub.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}</li>`).join('')}</ol></details>`;
+  }
+  h+=`<h3>Teams</h3><div class="scroll"><table><tr><th>Team</th><th>Strategy</th><th>Firm</th><th>Value</th><th>Paid</th><th>Rent</th><th>Lost bids</th><th>Left</th><th>Score</th></tr>${S.teams.map(t=>`<tr><td class="${t.id==='you'?'you':''}">${tname(t.id)}</td><td>${t.id==='you'?'Yours':BOTS[t.strat].name}</td><td>${t.won!=null?LAB[t.won]:'<span class="pill no">none yet</span>'}</td><td class="n">${t.won!=null?t.val[t.won]:''}</td><td class="n">${fmt(t.paid)}</td><td class="n">${fmt(t.rent)}</td><td class="n">${fmt(t.spentLost||0)}</td><td class="n">${fmt(t.points)}</td><td class="n">${t.won!=null?fmt(score(t,RULES)):''}</td></tr>`).join('')}</table></div>`;
+  if(S.notes.length)h+=`<ul class="log">${S.notes.map(n=>`<li>${n}</li>`).join('')}</ul>`;
+  $('result').innerHTML=h;
+}
+function play(){
+  if(S.done)return;
+  const t=me(),B=botBids(S,RULES,rng,null);
+  if(t.won==null){let p=Math.max(0,Math.floor(+$('bid').value||0));B.you={p,time:Math.max(1,Math.round((Date.now()-shownAt)/1000))}}
+  const res=stepRound(S,RULES,B,rng);
+  BET.closed=true;settleMarkets();
+  $('msg').textContent=res.winner==='you'?`You won ${LAB[res.lot]}.`:'';
+  $('bid').value=0;shownAt=Date.now();renderAll();openMarkets();
+}
+
+// ---------- betting ----------
+const BETTORS=['you','1','2','3','4','5','6'];
+const BET={wallet:Object.fromEntries(BETTORS.map(b=>[b,100])),op:0,markets:[],log:[],closed:false,last:null},LB=25;
+const betMode=()=>$('betmode').value,betCut=()=>Math.max(0,Math.min(30,+$('betcut').value||0))/100;
+function lmsrCost(q){const m=Math.max(...q);return m+LB*Math.log(q.reduce((a,x)=>a+Math.exp((x-m)/LB),0))}
+function lmsrPrices(q){const m=Math.max(...q),e=q.map(x=>Math.exp((x-m)/LB)),z=e.reduce((a,c)=>a+c,0);return e.map(x=>x/z)}
+function sharesFor(q,i,spend){let lo=0,hi=spend*50;for(let k=0;k<60;k++){const mid=(lo+hi)/2,q2=q.slice();q2[i]+=mid;(lmsrCost(q2)-lmsrCost(q)>spend?hi=mid:lo=mid)}return lo}
+// markets on the whole auction, decided when it ends
+function auctionFacts(St){
+  const price={},bids={};for(const f of St.lots){price[f]=-1;bids[f]=0}
+  for(const h of St.history){const r=h.res;bids[r.lot]+=r.rows.filter(x=>x.p>0).length;if(r.winner)price[r.lot]=r.price}
+  const sold=St.lots.filter(f=>price[f]>=0);
+  const top=sold.length?sold.reduce((a,f)=>price[f]>price[a]?f:a,sold[0]):null;
+  const most=St.lots.reduce((a,f)=>bids[f]>bids[a]?f:a,St.lots[0]);
+  const rounds=St.history.length,op=St.ledger.reduce((a,l)=>a+l[3],0);
+  return{top,most,rounds,op};
+}
+const RBANDS=[[0,8,'8 or fewer'],[9,10,'9 or 10'],[11,13,'11 to 13'],[14,99,'14 or more']];
+const OBANDS=[[0,299,'Under 300'],[300,399,'300 to 399'],[400,499,'400 to 499'],[500,9999,'500 or more']];
+const band=(B,x)=>String(B.findIndex(b=>x>=b[0]&&x<=b[1]));
+function outcomeOf(m,F){if(m.kind==='top')return String(F.top);if(m.kind==='most')return String(F.most);if(m.kind==='rounds')return band(RBANDS,F.rounds);return band(OBANDS,F.op)}
+const MQ={top:'Which firm will sell for the highest price?',most:'Which firm will attract the most bids?',rounds:'How many rounds will the auction take?',op:'How many points will the operator collect from the auction?'};
+function buy(m,who,i,amt){
+  amt=Math.min(amt,BET.wallet[who]);if(amt<=0)return 0;BET.wallet[who]-=amt;m.spent[who]+=amt;
+  if(m.mode==='pool'){m.stake[i]+=amt;m.hold[who][i]+=amt}
+  else{const net=amt*(1-betCut()),sh=sharesFor(m.q,i,net);m.q[i]+=sh;m.hold[who][i]+=sh;m.fees+=amt-net}
+  return amt;
+}
+function withdraw(j,i){
+  if(BET.closed)return;const m=BET.markets[j],h=m.hold.you[i];if(!h)return;
+  let back;
+  if(m.mode==='pool'){back=h;m.stake[i]-=h}
+  else{const q2=m.q.slice();q2[i]-=h;back=lmsrCost(m.q)-lmsrCost(q2);m.q=q2}
+  m.hold.you[i]=0;m.spent.you-=back;BET.wallet.you+=back;renderBets();
+}
+function refundOpen(){for(const m of BET.markets)for(const b of BETTORS){if(m.mode==='pool'){BET.wallet[b]+=m.spent[b]}else{BET.wallet[b]+=m.spent[b]}}BET.markets=[];BET.closed=false}
+function openMarkets(){
+  if(S.history.length||S.done||BET.markets.length)return renderBets();
+  const lots=S.lots.slice().sort((x,y)=>x-y);
+  const ms=[{kind:'top',outs:lots.map(f=>({k:String(f),l:LAB[f]}))},{kind:'most',outs:lots.map(f=>({k:String(f),l:LAB[f]}))},
+    {kind:'rounds',outs:RBANDS.map((b,i)=>({k:String(i),l:b[2]}))},{kind:'op',outs:OBANDS.map((b,i)=>({k:String(i),l:b[2]}))}];
+  const R=seeded(4242),cnt=ms.map(m=>m.outs.map(()=>0)),N=120;
+  for(let n=0;n<N;n++){const C=cloneState(S);let g=0;while(!C.done&&g++<60)stepRound(C,RULES,botBids(C,RULES,R,'value'),R);const F=auctionFacts(C);ms.forEach((m,j)=>{const k=m.outs.findIndex(o=>o.k===outcomeOf(m,F));if(k>=0)cnt[j][k]++})}
+  const mode=betMode();
+  ms.forEach((m,j)=>{const n=m.outs.length;m.mode=mode;m.stake=Array(n).fill(0);m.q=Array(n).fill(0);m.fees=0;
+    m.hold=Object.fromEntries(BETTORS.map(b=>[b,Array(n).fill(0)]));m.spent=Object.fromEntries(BETTORS.map(b=>[b,0]));
+    m.belief=cnt[j].map(x=>(x+0.5)/(N+0.5*n));
+    for(let b=1;b<=6;b++){const who=String(b),team=S.teams[b];
+      const own=(m.kind==='top'||m.kind==='most')?m.outs.map(o=>team.val[+o.k]+1):m.outs.map(()=>1),oz=own.reduce((a,c)=>a+c,0);
+      const v=m.belief.map((p,i)=>(0.5*p+0.5*own[i]/oz)*Math.exp(0.8*(rng()+rng()+rng()-1.5))),z=v.reduce((a,c)=>a+c,0),view=v.map(x=>x/z);
+      const budget=Math.min(BET.wallet[who],4+Math.floor(rng()*8));if(budget<=0)continue;
+      if(mode==='pool'){const ord=view.map((x,i)=>[x,i]).sort((x,y)=>y[0]-x[0]);buy(m,who,ord[0][1],Math.ceil(budget*0.7));buy(m,who,ord[1][1],Math.floor(budget*0.3))}
+      else{let left=budget;for(let s2=0;s2<20&&left>0;s2++){const p=lmsrPrices(m.q);let bi=-1,bg=0.03;view.forEach((x,i)=>{if(x-p[i]>bg){bg=x-p[i];bi=i}});if(bi<0)break;left-=buy(m,who,bi,1)}}
+    }
+  });
+  BET.markets=ms;BET.closed=false;renderBets();
+}
+function placeBet(j,i){
+  if(BET.closed||S.history.length)return;
+  const m=BET.markets[j],amt=Math.max(0,Math.min(BET.wallet.you,+$(`bet-${j}-${i}`).value||0));if(!amt)return;
+  buy(m,'you',i,amt);renderBets();
+}
+function settleMarkets(){
+  if(!S.done||!BET.markets.length)return;
+  const cut=betCut(),F=auctionFacts(S),net=Object.fromEntries(BETTORS.map(b=>[b,0]));
+  for(const m of BET.markets){
+    const w=outcomeOf(m,F),i=m.outs.findIndex(x=>x.k===w);let op=0,how='';const back={};
+    if(m.mode==='pool'){const tot=m.stake.reduce((a,c)=>a+c,0),W=i>=0?m.stake[i]:0;
+      if(W>0){const pot=tot*(1-cut);for(const b of BETTORS)back[b]=m.hold[b][i]/W*pot;op=tot*cut;how=`pot ${fmt(tot)}, operator cut ${fmt(op)}, ${fmt(pot)} shared by stakes of ${fmt(W)} on the result (${fmt(pot/W)} per token)`}
+      else{for(const b of BETTORS)back[b]=m.spent[b];how='nobody backed the result, so all stakes were returned'}}
+    else{const paid=i>=0?m.q[i]:0;for(const b of BETTORS)back[b]=i>=0?m.hold[b][i]:0;const taken=BETTORS.reduce((a,b)=>a+m.spent[b],0);op=taken-paid;how=`winning shares pay 1 token each: ${fmt(paid)} paid out against ${fmt(taken)} taken in (including ${fmt(m.fees)} fees)`}
+    for(const b of BETTORS){BET.wallet[b]+=back[b];net[b]+=back[b]-m.spent[b]}
+    BET.op+=op;BET.log.push({m,res:i>=0?m.outs[i].l:'—',spent:m.spent.you,back:back.you,op,how});
+  }
+  BET.last=net;BET.markets=[];
+}
+function renderBets(){
+  $('bettokens').textContent=fmt(BET.wallet.you);
+  $('betstatus').textContent=S.done?'Auction over: bets settled.':BET.closed?'Betting closed. Bets are settled when the auction ends.':'Betting is open until you submit round 1.';
+  $('betexplain').textContent=betMode()==='pool'?'Pooled betting: everyone stakes tokens on an outcome. At the end the operator takes its cut and the rest of the pot is shared among those who backed the result, in proportion to their stakes.':'Live prices: each outcome has a price from 0 to 100, read as the market\'s probability. Buying pushes a price up. Each share pays 1 token if that outcome happens. Withdrawing sells your shares back at the current price. The operator runs the market maker and takes a cut of each purchase; it can lose if bettors know better than its prices.';
+  if(!BET.markets.length){$('markets').innerHTML=S&&S.done?'<p class="note">Start a new game to bet again.</p>':''}
+  else $('markets').innerHTML=BET.markets.map((m,j)=>{const tot=m.stake.reduce((a,c)=>a+c,0),pr=m.mode==='lmsr'?lmsrPrices(m.q):null;
+    return `<div class="mkt"><h4>${MQ[m.kind]}</h4><div class="scroll"><table><tr><th>Outcome</th><th>${m.mode==='pool'?'Share of pot':'Price'}</th><th>${m.mode==='pool'?'Staked':'Shares'}</th><th>Yours</th><th>${BET.closed?'':'Bet tokens'}</th></tr>${m.outs.map((o,i)=>{const p=m.mode==='pool'?(tot?m.stake[i]/tot:0):pr[i];
+      return `<tr><td>${o.l}</td><td class="n"><span class="pbar" style="width:${Math.round(p*60)}px"></span>${Math.round(p*100)}${m.mode==='pool'?'%':''}</td><td class="n">${fmt(m.mode==='pool'?m.stake[i]:m.q[i])}</td><td class="n">${fmt(m.hold.you[i])}</td><td>${BET.closed?'':`<input id="bet-${j}-${i}" type="number" min="1" aria-label="Tokens on ${o.l}"> <button onclick="placeBet(${j},${i})">Bet</button>${m.hold.you[i]?` <button class="ghost" onclick="withdraw(${j},${i})">Withdraw</button>`:''}`}</td></tr>`}).join('')}</table></div></div>`}).join('');
+  if(BET.log.length){const mine=BET.log.slice(-4);
+    $('betlog').innerHTML=`<h3>Last auction's bets, settled</h3><div class="scroll"><table><tr><th>Market</th><th>Result</th><th>You bet</th><th>You got</th><th>Operator</th></tr>${mine.map(l=>`<tr><td>${MQ[l.m.kind]}<br><span class="note">${l.how}</span></td><td>${l.res}</td><td class="n">${fmt(l.spent)}</td><td class="n">${fmt(l.back)}</td><td class="n">${fmt(l.op)}</td></tr>`).join('')}</table></div>`}
+  else $('betlog').innerHTML='';
+  const rows=BETTORS.map(b=>({b,t:BET.wallet[b],n:BET.last?BET.last[b]:null})).sort((x,y)=>y.t-x.t);
+  $('board').innerHTML=`<h3>Leaderboard: betting tokens</h3><div class="scroll"><table><tr><th>#</th><th>Bettor</th><th>Tokens now</th><th>Last auction</th></tr>${rows.map((r,i)=>`<tr><td class="n">${i+1}</td><td class="${r.b==='you'?'you':''}">${tname(r.b)}</td><td class="n">${fmt(r.t)}</td><td class="n">${r.n==null?'':(r.n>=0?'+':'')+fmt(r.n)}</td></tr>`).join('')}<tr><td></td><td><b>Operator</b> (betting income)</td><td class="n">${fmt(BET.op)}</td><td></td></tr></table></div><p class="note">Tokens carry over from game to game. Tokens still on the table count as spent until the auction ends.</p>`;
+}
+
+// ---------- operator mode ----------
+let OPRUNS=[];
+function ruleText(r){return `${FORMATS[r.format]}${r.format==='sealed'?', '+PRICES[r.price].toLowerCase():''}${r.format!=='lottery'?'; ties: '+TIES[r.tie].toLowerCase():''}; cap ${r.cap<100?r.cap+'%':'none'}; steps of ${r.step}; min ${r.minBid}${r.demandRes?`; demand pricing (top ${r.demandRes})`:''}${r.alignW?'; alignment weighting':''}; rent ${r.rent}${r.rise?` +${r.rise}/round`:''} (max ${r.rentCap>=1000?'none':r.rentCap}); ${r.offer} firms, ${r.order==='popular'?'most wanted first':r.order==='least'?'least wanted first':'random order'}; leftover worth ${r.leftW}${r.block===false?'; no blocked firms':''}`}
+function operatorRun(){
+  const r=opSim(readRules(),1000,2026);OPRUNS.push(r);renderOps();
+}
+function renderOps(){
+  if(!OPRUNS.length){$('o-out').innerHTML='';return}
+  const best=OPRUNS.reduce((a,b)=>b.total>a.total?b:a),mx=Math.max(...OPRUNS.map(x=>x.total));
+  let h=`<div class="key"><span><i class="k-sale"></i>Firm sales</span><span><i class="k-boost"></i>Lost bids and tickets</span><span><i class="k-rent"></i>Rent</span></div><div class="scroll"><table><tr><th>#</th><th>Rules</th><th>Operator revenue per auction</th><th></th><th>Rounds</th><th>Ties</th><th>Sales voided</th><th>Firms by lot</th><th>Average firm value</th><th>Got their top firm</th><th>Average team score</th></tr>`;
+  OPRUNS.forEach((x,i)=>{h+=`<tr class="${x===best?'best':''}"><td class="n">${i+1}</td><td style="min-width:220px">${ruleText(x.rules)}</td><td class="n">${x.total.toFixed(0)} <span class="note">(${(x.total/7).toFixed(0)}%)</span><br><span class="note">${x.sale.toFixed(0)} + ${x.lost.toFixed(0)} + ${x.rent.toFixed(0)}</span></td><td><div class="opbar" style="width:${Math.max(8,x.total/mx*100)}%"><span class="k-sale" style="width:${x.sale/x.total*100||0}%"></span><span class="k-boost" style="width:${x.lost/x.total*100||0}%"></span><span class="k-rent" style="width:${x.rent/x.total*100||0}%"></span></div></td><td class="n">${x.rounds.toFixed(1)}</td><td class="n">${x.ties.toFixed(1)}</td><td class="n">${x.voids.toFixed(1)}</td><td class="n">${x.lotGiven.toFixed(1)}</td><td class="n">${x.value.toFixed(0)}</td><td class="n">${x.top.toFixed(0)}%</td><td class="n">${x.score.toFixed(0)}</td></tr>`});
+  h+='</table></div>';
+  const l=OPRUNS.at(-1);h+=`<p class="note" style="margin-top:8px">Run ${OPRUNS.length}: the operator collects ${l.total.toFixed(0)} of the 700 points (${(l.total/7).toFixed(0)}%) over ${l.rounds.toFixed(1)} rounds on average. Teams end up with firms worth ${l.value.toFixed(0)} to them on average, and ${l.top.toFixed(0)}% get the firm they valued most. Best revenue so far: run ${OPRUNS.indexOf(best)+1}.</p>`;
+  $('o-out').innerHTML=h;
+}
+
+// ---------- chatbot ----------
+function roundText(){
+  const t=me(),L=lotInfo(),R=RULES,lines=[];
+  lines.push(`UDC project market lab. Round ${S.round}. Format: ${FORMATS[R.format]}${R.format==='sealed'?'; price: '+PRICES[R.price]:''}${R.format!=='lottery'?'; ties: '+TIES[R.tie]:''}.`);
+  lines.push(`Rules: bids in steps of ${R.step}; cap ${R.cap<100?R.cap+'% of points':'none'}; rent ${R.rent}${R.rise?` rising by ${R.rise} a round`:''}, at most ${R.rentCap>=1000?'no limit':R.rentCap} in total; alignment weighting ${R.alignW?'on':'off'}; leftover points are worth ${R.leftW} each in our score.`);
+  if(t.won!=null)lines.push(`We already have ${LAB[t.won]}.`);
+  else lines.push(`For sale now: ${LAB[L.lot]}. Its value to us: ${L.V} of 100. Minimum bid ${L.min}. Most we may bid: ${L.allowed}. If we do not win we pay ${fmt(L.rent)} rent.${L.excluded?' We cannot bid for it.':''}`);
+  lines.push(`Our points: ${fmt(t.points)}.`);
+  lines.push(`Firms still to come, in order, with their value to us: ${S.queue.slice(1).map(f=>`${LAB[f]} (${t.val[f]})`).join('; ')||'none'}.`);
+  for(const hr of S.history){const r=hr.res;lines.push(`Round ${hr.round}, ${LAB[r.lot]}: `+r.rows.map(x=>`${tname(x.team)}${x.team==='you'?' (us)':''} ${x.p?fmt(x.p):'pass'}`).join(', ')+`. Result: ${r.winner?tname(r.winner)+' won for '+fmt(r.price):r.voided?'tie, no sale':'no sale'}.`)}
+  lines.push('Teams still without a firm: '+S.teams.filter(x=>x.won==null).map(x=>`${tname(x.id)} (${fmt(x.points)} points)`).join('; ')+'.');
+  const goal=$('botgoal').value.trim();if(goal)lines.push(`Our team's goal: ${goal}`);
+  lines.push('');lines.push(`Suggest our bid for this round and explain briefly. End your reply with one line in exactly this format: BID: 40 (a number of points) or BID: PASS`);
+  return lines.join('\n');
+}
+async function copyText(t,msgId,boxId){try{await navigator.clipboard.writeText(t);$(msgId).textContent='Copied.'+(boxId==='roundbox'?' Paste it into your chatbot, then paste its reply below.':' Paste it into a chatbot, then ask it for a strategy.');$(boxId).hidden=true}catch(e){const b=$(boxId);b.hidden=false;b.value=t;b.focus();b.select();$(msgId).textContent='Copying was blocked here. The text is selected in the box: copy it with your keyboard.'}}
+$('copyround').onclick=()=>copyText(roundText(),'botmsg','roundbox');
+$('usebid').onclick=()=>{
+  const lines=$('botreply').value.split(/\n/).filter(l=>/BID\s*:/i.test(l));
+  if(!lines.length){$('botmsg').textContent='No line starting BID: was found. Ask the chatbot to end with, for example, BID: 40 or BID: PASS.';return}
+  const line=lines.at(-1);if(/PASS/i.test(line)){$('bid').value=0;$('botmsg').textContent='The chatbot passes: your bid is set to 0. Press Submit.';return}
+  const m=line.match(/BID\s*:\s*(\d+(?:\.\d+)?)/i);if(!m){$('botmsg').textContent='Could not read a number after BID:.';return}
+  const L=lotInfo();let p=Math.floor(+m[1]);const notes=[];
+  if(L&&p>L.allowed){notes.push(`cut from ${p} to the cap of ${L.allowed}`);p=L.allowed}
+  if(L&&p>0&&p<L.min)notes.push(`${p} is below the minimum of ${L.min}, so it would count as a pass`);
+  $('bid').value=p;$('botmsg').textContent=`Bid set to ${p}${notes.length?' ('+notes.join('; ')+')':''}. Check it, then press Submit.`;
+};
+$('copyrules').onclick=()=>copyText(new DOMParser().parseFromString($('rulesmd').innerHTML,'text/html').documentElement.textContent,'copymsg','rulesbox');
+
+// ---------- boot ----------
+$('excl').innerHTML='<option value="-1">None: my team has no blocked firm</option>'+LAB.map((l,i)=>`<option value="${i}">${l}</option>`).join('');$('excl').value=12;
+const rv=$('rivals'),start=['allin','value','shade','patient','bargain','random'];
+start.forEach((s,i)=>{const d=document.createElement('div');d.className='rival';d.innerHTML=`<span class="num">Team ${i+1}</span><select aria-label="Strategy for team ${i+1}">${Object.entries(BOTS).map(([k,v])=>`<option value="${k}">${v.name}: ${v.desc}</option>`).join('')}</select>`;d.querySelector('select').value=s;d.querySelector('select').onchange=newGame;rv.append(d)});
+$('shuffle').onclick=()=>{const ks=Object.keys(BOTS);document.querySelectorAll('.rival select').forEach(s=>s.value=ks[Math.floor(rng()*ks.length)]);newGame()};
+document.querySelectorAll('#rules select,#rules input').forEach(e=>e.onchange=newGame);$('excl').onchange=newGame;$('r-block').onchange=()=>{$('excl').disabled=$('r-block').value==='off';newGame()};
+['betmode','betcut'].forEach(id=>$(id).onchange=()=>{refundOpen();openMarkets()});
+$('play').onclick=play;$('newgame').onclick=newGame;$('o-run').onclick=operatorRun;$('o-clear').onclick=()=>{OPRUNS=[];renderOps()};
+newGame();
+
+</script>
+</body></html>
