@@ -114,55 +114,17 @@ ol.steps ul.sub li{list-style:disc}
 <div class="wrap">
   <header>
     <h1>Project market, Game A: one firm per round</h1>
-    <div class="gamebar"><b>There are two games.</b> In <b>Game A</b> (this page, the market lab) one firm is sold per round and the operator can switch many rules. <b>Game B</b> (file UDC_W3_practice_market_v8.html) sells every firm on offer at once in each round: teams bid for up to three firms and can pay a secret boost.</div>
-    <p class="lead">One firm is sold each round, most wanted first unless the operator decides otherwise. Every team still without a firm bids or passes; one team wins; the rest pay rent and wait for the next firm. Switch the rules below to try different market designs. Your team's score is the value of the firm you win (from your survey ranking, 0 to 100) plus any leftover points the rules say are worth keeping. Nothing here is saved or counts.</p>
+    <div class="gamebar"><b>There are two games.</b> In <b>Game A</b> (this page, the market lab) one firm is sold per round and the operator can switch many rules. <b>Game B</b> (<a href="game-b.html">open Game B</a>) sells every firm on offer at once in each round: teams bid for up to three firms and can pay a secret boost.</div>
+    <p class="lead">One firm is sold each round, most wanted first unless the operator decides otherwise. Every team still without a firm bids or passes; one team wins; the rest pay rent and wait for the next firm. To try different market designs, open "Change the rules" further down the page. Your team's score is the value of the firm you win (from your survey ranking, 0 to 100) plus any leftover points the rules say are worth keeping. Nothing here is saved or counts.</p>
     <div class="btns"><button id="copyrules" class="ghost">Copy the full rules for an AI chatbot</button></div>
     <p id="copymsg" class="note" role="status"></p>
     <textarea id="rulesbox" hidden readonly aria-label="Full rules" style="width:100%;height:220px;font-family:var(--f-mono);font-size:12px"></textarea>
   </header>
 
-  <section class="panel setup" aria-labelledby="h-setup">
-    <h2 id="h-setup">Set up the game</h2>
-    <p class="note" style="margin:0 0 8px">Choose the market rules and how the six simulated teams behave. Changing anything here starts a new game. Operator mode, at the bottom, uses the same rules.</p>
-    <div class="setupcols">
-      <div>
-      <h3 style="margin-top:0">Market rules</h3>
-      <p class="note" style="margin:0 0 8px"><b>Before the auction</b>, every student has already ranked their seven preferred firms in the survey. These rankings give each team a value for each firm (its favourite firm is 100). The value sets the team's score, and the operator can also use it to weight bids by alignment (Alignment weighting) or to break ties (Most aligned team wins). In this practice lab the rankings are made up; in the real auction they are your survey answers.</p>
-      <div class="oprules" id="rules">
-        <div><label for="r-format">Format</label><select id="r-format"></select></div>
-        <div><label for="r-tie">If the top bids tie</label><select id="r-tie"></select></div>
-        <div><label for="r-price">Price (sealed bids)</label><select id="r-price"></select></div>
-        <div><label for="r-cap">Bid cap</label><select id="r-cap"><option value="100">No cap</option><option value="75">75% of points</option><option value="60">60% of points</option><option value="50">50% of points</option></select></div>
-        <div><label for="r-step">Bids in steps of</label><select id="r-step"><option>1</option><option>5</option><option selected>10</option></select></div>
-        <div><label for="r-min">Minimum bid</label><input id="r-min" type="number" min="1" max="50" value="1"></div>
-        <div><label for="r-demand">Minimum price from survey demand</label><select id="r-demand"><option value="0">Off</option><option value="20">Top firm starts at 20</option><option value="40">Top firm starts at 40</option><option value="60">Top firm starts at 60</option></select></div>
-        <div><label for="r-alignw">Alignment weighting</label><select id="r-alignw"><option value="0">Off</option><option value="1">On: bids count × (0.5 + value ÷ 100)</option></select></div>
-        <div><label for="r-rent">Rent per round</label><input id="r-rent" type="number" min="0" max="40" value="10"></div>
-        <div><label for="r-rise">Rent rises each round by</label><select id="r-rise"><option>0</option><option>5</option><option>10</option></select></div>
-        <div><label for="r-rentcap">Most rent a team can pay</label><select id="r-rentcap"><option>30</option><option selected>50</option><option>80</option><option value="1000">No limit</option></select></div>
-        <div><label for="r-offer">Firms on offer</label><select id="r-offer"><option>8</option><option selected>10</option><option>12</option><option>15</option></select></div>
-        <div><label for="r-order">Order of sale</label><select id="r-order"><option value="popular">Most wanted first</option><option value="least">Least wanted first</option><option value="random">Random order</option></select></div>
-        <div><label for="r-left">Leftover points are worth</label><select id="r-left"><option value="0">Nothing</option><option value="0.5">Half a point each</option><option value="1">A point each</option></select></div>
-      </div>
-      <label for="r-block">Week 3 blocking (teams cannot bid for a firm a member studied in Week 3)</label>
-      <select id="r-block"><option value="on">On: each team has one blocked firm</option><option value="off">Off: no blocked firms for any team</option></select>
-      <label for="excl">Your team's blocked firm</label>
-      <select id="excl"></select>
-      </div>
-      <div>
-      <h3 style="margin-top:0">The other teams</h3>
-      <p class="note" style="margin:0 0 6px">Choose the strategy each simulated team plays, or press Random rivals.</p>
-      <div class="rivals" id="rivals"></div>
-      <div class="btns"><button id="shuffle" class="ghost">Random rivals</button></div>
-
-
-      </div>
-    </div>
-  </section>
-
   <div class="cols">
     <section class="panel" aria-labelledby="h-you">
       <h2 id="h-you">Your team</h2>
+      <p class="note" id="rulesum" style="margin:0 0 8px"></p>
       <p class="box" style="margin-top:0">You are playing <b>Your team (you)</b>, highlighted in yellow in every table. The six other teams (Team 1 to Team 6) are simulated.</p>
       <p class="note" style="margin:0 0 8px">Where the values come from: in this practice game your team and every other team have four made-up members, each of whom ranked seven firms in a pretend survey (more popular firms are more likely to be picked). A firm's value is the team's total survey points for it, scaled so the team's favourite firm is worth 100. In the real auction the values come from your team's actual survey answers. Open "Your team's values" to see your made-up members' rankings.</p>
       <div id="lotcard"></div>
@@ -215,6 +177,45 @@ ol.steps ul.sub li{list-style:disc}
       </div>
     </section>
   </div>
+
+  <details class="panel setup" id="setupbox">
+    <summary><h2 id="h-setup" style="display:inline">Change the rules and the rival teams</h2> <span class="note">(optional: changing anything starts a new game)</span></summary>
+    <p class="note" style="margin:8px 0">Choose the market rules and how the six simulated teams behave. Changing anything here starts a new game. "Be the operator", below, uses the same rules.</p>
+    <div class="setupcols">
+      <div>
+      <h3 style="margin-top:0">Market rules</h3>
+      <p class="note" style="margin:0 0 8px"><b>Before the auction</b>, every student has already ranked their seven preferred firms in the survey. These rankings give each team a value for each firm (its favourite firm is 100). The value sets the team's score, and the operator can also use it to weight bids by alignment (Alignment weighting) or to break ties (Most aligned team wins). In this practice lab the rankings are made up; in the real auction they are your survey answers.</p>
+      <div class="oprules" id="rules">
+        <div><label for="r-format">Format</label><select id="r-format"></select></div>
+        <div><label for="r-tie">If the top bids tie</label><select id="r-tie"></select></div>
+        <div><label for="r-price">Price (sealed bids)</label><select id="r-price"></select></div>
+        <div><label for="r-cap">Bid cap</label><select id="r-cap"><option value="100">No cap</option><option value="75">75% of points</option><option value="60">60% of points</option><option value="50">50% of points</option></select></div>
+        <div><label for="r-step">Bids in steps of</label><select id="r-step"><option>1</option><option>5</option><option selected>10</option></select></div>
+        <div><label for="r-min">Minimum bid</label><input id="r-min" type="number" min="1" max="50" value="1"></div>
+        <div><label for="r-demand">Minimum price from survey demand</label><select id="r-demand"><option value="0">Off</option><option value="20">Top firm starts at 20</option><option value="40">Top firm starts at 40</option><option value="60">Top firm starts at 60</option></select></div>
+        <div><label for="r-alignw">Alignment weighting</label><select id="r-alignw"><option value="0">Off</option><option value="1">On: bids count × (0.5 + value ÷ 100)</option></select></div>
+        <div><label for="r-rent">Rent per round</label><input id="r-rent" type="number" min="0" max="40" value="10"></div>
+        <div><label for="r-rise">Rent rises each round by</label><select id="r-rise"><option>0</option><option>5</option><option>10</option></select></div>
+        <div><label for="r-rentcap">Most rent a team can pay</label><select id="r-rentcap"><option>30</option><option selected>50</option><option>80</option><option value="1000">No limit</option></select></div>
+        <div><label for="r-offer">Firms on offer</label><select id="r-offer"><option>8</option><option selected>10</option><option>12</option><option>15</option></select></div>
+        <div><label for="r-order">Order of sale</label><select id="r-order"><option value="popular">Most wanted first</option><option value="least">Least wanted first</option><option value="random">Random order</option></select></div>
+        <div><label for="r-left">Leftover points are worth</label><select id="r-left"><option value="0">Nothing</option><option value="0.5">Half a point each</option><option value="1">A point each</option></select></div>
+      </div>
+      <label for="r-block">Week 3 blocking (teams cannot bid for a firm a member studied in Week 3)</label>
+      <select id="r-block"><option value="on">On: each team has one blocked firm</option><option value="off">Off: no blocked firms for any team</option></select>
+      <label for="excl">Your team's blocked firm</label>
+      <select id="excl"></select>
+      </div>
+      <div>
+      <h3 style="margin-top:0">The other teams</h3>
+      <p class="note" style="margin:0 0 6px">Choose the strategy each simulated team plays, or press Random rivals.</p>
+      <div class="rivals" id="rivals"></div>
+      <div class="btns"><button id="shuffle" class="ghost">Random rivals</button></div>
+
+
+      </div>
+    </div>
+  </details>
 
   <section class="panel" aria-labelledby="h-op">
     <h2 id="h-op">Be the operator</h2>
@@ -1007,5 +1008,16 @@ document.querySelectorAll('#rules select,#rules input').forEach(e=>e.onchange=ne
 $('play').onclick=play;$('newgame').onclick=newGame;$('o-run').onclick=operatorRun;$('o-clear').onclick=()=>{OPRUNS=[];renderOps()};
 newGame();
 
+
+// short summary of the current rules above the bid box
+(function(){
+  const ids=[['r-format','Format'],['r-price','Price'],['r-tie','Ties'],['r-rent','Rent per round'],['r-step','Bids in steps of'],['r-block','Week 3 blocking']];
+  function txt(id){const el=document.getElementById(id); if(!el) return ''; return el.tagName==='SELECT'? (el.options[el.selectedIndex]||{}).text||'' : el.value;}
+  function upd(){const b=document.getElementById('rulesum'); if(!b) return;
+    b.innerHTML='<b>Rules for this game:</b> '+ids.map(([id,n])=>n+': '+txt(id).replace(/:.*$/,'')).join(' · ')+'. <a href="#setupbox" id="rulelink">Change the rules</a> (further down).';
+    const a=document.getElementById('rulelink'); if(a) a.onclick=()=>{document.getElementById('setupbox').open=true;};}
+  document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#setupbox')) setTimeout(upd,0);});
+  window.addEventListener('load',()=>setTimeout(upd,0)); setTimeout(upd,0);
+})();
 </script>
 </body></html>
